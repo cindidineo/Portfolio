@@ -1,0 +1,81 @@
+These are the 10 customer messages
+(1. I was charged twice for my subscription this month — please fix it.
+2. How do I reset my password? I can't find the option in the app.
+3. Love the new update — the app feels much faster. Great job!
+4. My order arrived damaged and I'm missing items. This is unacceptable.
+5. Is there a way to export my data to CSV?
+6. Thanks for the quick support last week — really appreciated the help!
+7. The app keeps crashing when I open the settings page. Please advise.
+8. Can I change my billing date to the 1st of each month?
+9. Your customer service rep was rude to me on the phone. Very disappointed.
+10. Fantastic product — it's saved me so much time.)
+
+The 10 customer messages have been classified
+(1,Complaint
+2,Question
+3,Praise
+4,Complaint
+5,Question
+6,Praise
+7,Complaint
+8,Question
+9,Complaint
+10,Praise)
+
+The Zero short prompt
+Output format: CSV with exactly two columns and a header: id,label
+The CSV header must be exactly: id,label
+Each subsequent line must contain the message id and the assigned label (e.g. 1,Complaint)
+Only output the CSV — no extra text, no explanation.
+
+Messages:
+1. I was charged twice for my subscription this month — please fix it.
+2. How do I reset my password? I can't find the option in the app.
+3. Love the new update — the app feels much faster. Great job!
+4. My order arrived damaged and I'm missing items. This is unacceptable.
+5. Is there a way to export my data to CSV?
+6. Thanks for the quick support last week — really appreciated the help!
+7. The app keeps crashing when I open the settings page. Please advise.
+8. Can I change my billing date to the 1st of each month?
+9. Your customer service rep was rude to me on the phone. Very disappointed.
+10. Fantastic product — it's saved me so much time.
+
+Fewer short prompt
+Examples:
+Message: "Thanks for the quick help — your team resolved my issue fast!"
+Label: Praise
+
+Message: "Why is my invoice higher than expected this month?"
+Label: Question
+
+Message: "My package never arrived and no one is responding to my emails."
+Label: Complaint
+
+Output format: CSV with exactly two columns and a header: id,label
+The CSV header must be exactly: id,label
+Each subsequent line must contain the message id and the assigned label (e.g. 1,Complaint)
+Only output the CSV — no extra text, no explanation.
+
+Messages:
+1. I was charged twice for my subscription this month — please fix it.
+2. How do I reset my password? I can't find the option in the app.
+3. Love the new update — the app feels much faster. Great job!
+4. My order arrived damaged and I'm missing items. This is unacceptable.
+5. Is there a way to export my data to CSV?
+6. Thanks for the quick support last week — really appreciated the help!
+7. The app keeps crashing when I open the settings page. Please advise.
+8. Can I change my billing date to the 1st of each month?
+9. Your customer service rep was rude to me on the phone. Very disappointed.
+10. Fantastic product — it's saved me so much time.
+
+The results of the run
+CHATGPT 70%
+GEMINI  80%
+Claude  60%
+
+The sentence key 
+Few-shot prompting clearly outperformed zero-shot across ChatGPT, Claude, and Gemini. 
+The 3 examples helped the models understand exactly how to classify Complaint, Question, and Praise, 
+which reduced mistakes on unclear messages.
+Without examples, the models were less consistent and often mixed up similar tones.
+This shows that giving the AI a few examples is the simplest way to make results more accurate and reliable.
