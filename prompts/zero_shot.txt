@@ -1,0 +1,11 @@
+You will be given 10 customer support messages numbered 1–10. For each message, classify it into exactly one of these categories: Complaint, Question, or Praise.
+
+Output format: CSV with two columns: id,label
+- The CSV header must be exactly: id,label
+- Each subsequent line must contain the message id and the assigned label, e.g. 1,Complaint
+
+Only output the CSV (no extra text, no explanation). Then stop.
+
+Now classify the following messages (paste the 10 messages below when running):
+
+[MESSAGE LIST GOES HERE]
