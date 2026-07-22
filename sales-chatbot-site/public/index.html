@@ -44,31 +44,75 @@
     const input = document.getElementById('input');
     const messages = document.getElementById('messages');
 
-    function addMessage(who, text) {
+    function addMessage(who, text = '') {
       const el = document.createElement('div');
       el.className = 'msg ' + who;
       el.innerText = text;
       messages.appendChild(el);
       messages.scrollTop = messages.scrollHeight;
+      return el;
     }
 
-    async function sendMessage(text) {
+    // Streaming send using fetch + ReadableStream
+    async function sendMessageStream(text) {
       addMessage('user', text);
-      addMessage('loading', 'AVA is typing...');
+      const avaEl = addMessage('ava', '');
+
       try {
-        const r = await fetch('/api/chat', {
-          method: 'POST', headers: {'Content-Type': 'application/json'},
+        const r = await fetch('/api/chat-stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text })
         });
-        const data = await r.json();
-        const loading = document.querySelector('.msg.loading');
-        if (loading) loading.remove();
-        if (data && data.reply) addMessage('ava', data.reply);
-        else addMessage('ava', 'Sorry, I could not get a response.');
+
+        if (!r.ok || !r.body) {
+          const errText = await r.text();
+          avaEl.innerText = 'Error: ' + errText;
+          return;
+        }
+
+        const reader = r.body.getReader();
+        const decoder = new TextDecoder();
+        let done = false;
+        let buffer = '';
+
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          if (readerDone) break;
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+
+          // OpenAI sends SSE lines like: "data: {json}\n\n"
+          const parts = buffer.split('\n\n');
+          for (let i = 0; i < parts.length - 1; i++) {
+            const part = parts[i].trim();
+            if (!part) continue;
+            if (part.startsWith('data:')) {
+              const data = part.replace(/^data:\s*/, '');
+              if (data === '[DONE]') {
+                done = true;
+                break;
+              }
+              try {
+                const parsed = JSON.parse(data);
+                // Chat streaming uses choices[].delta.content
+                const delta = (parsed.choices && parsed.choices[0] && (parsed.choices[0].delta?.content || parsed.choices[0].message?.content));
+                if (delta) {
+                  avaEl.innerText += delta;
+                  messages.scrollTop = messages.scrollHeight;
+                }
+              } catch (e) {
+                // Not JSON — ignore
+              }
+            }
+          }
+
+          // Keep last partial chunk in buffer
+          buffer = parts[parts.length - 1];
+        }
+
       } catch (err) {
-        const loading = document.querySelector('.msg.loading');
-        if (loading) loading.remove();
-        addMessage('ava', 'Network error. Please try again later.');
+        avaEl.innerText = 'Network error. Please try again later.';
       }
     }
 
@@ -77,13 +121,13 @@
       const v = input.value.trim();
       if (!v) return;
       input.value = '';
-      sendMessage(v);
+      sendMessageStream(v);
     });
 
     document.querySelectorAll('.quick').forEach(b => b.addEventListener('click', () => {
       const q = b.innerText;
       input.value = q;
-      sendMessage(q);
+      sendMessageStream(q);
     }));
 
     // Welcome message
