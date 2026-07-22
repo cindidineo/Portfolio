@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ava - Neurofive Sales Assistant</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+ .chat-container { width: 400px; height: 600px; background: #1e293b; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+ .chat-header { background: #2563eb; padding: 15px; border-radius: 12px 12px 0 0; text-align: center; font-weight: bold; font-size: 18px; }
+ .chat-box { flex: 1; padding: 15px; overflow-y: auto; }
+ .message { margin-bottom: 12px; padding: 10px 14px; border-radius: 18px; max-width: 80%; line-height: 1.4; }
+ .user { background: #2563eb; margin-left: auto; text-align: right; }
+ .ava { background: #334155; margin-right: auto; }
+ .chat-input { display: flex; padding: 10px; border-top: 1px solid #334155; }
+ .chat-input input { flex: 1; padding: 10px; border: none; border-radius: 8px; background: #0f172a; color: #fff; outline: none; }
+ .chat-input button { margin-left: 8px; padding: 10px 16px; background: #2563eb; border: none; border-radius: 8px; color: #fff; cursor: pointer; }
+ .chat-input button:hover { background: #1d4ed8; }
+</style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">Ava - Neurofive Sales Assistant</div>
+  <div class="chat-box" id="chatBox">
+    <div class="message ava">Hi! I'm Ava from Neurofive Solutions 👋 How can I help you find the right product today?</div>
+  </div>
+  <div class="chat-input">
+    <input type="text" id="userInput" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+const API_KEY = "sk-YOUR_API_KEY_HERE"; // <-- PASTE YOUR OPENAI KEY HERE
+
+const SYSTEM_PROMPT = `
+You are "Ava", the friendly and professional Sales Assistant for Neurofive Solutions.
+
+About Neurofive Solutions:
+1. Neurofive App: AI productivity tools for teams to automate tasks and save time
+2. Neurofive Store: Premium tech gadgets - wireless headphones, smart watches, laptop bags, laptops
+3. Neurofive Cloud: Secure, fast cloud storage and backup for businesses
+
+RULES:
+1. Be warm, helpful, and consultative. Never be pushy.
+2. Ask questions to understand their problem before recommending.
+3. When recommending, list 2-3 key benefits and give a clear next step: "Want pricing, a demo, or a link?"
+4. Keep replies under 120 words and conversational.
+5. If asked about pricing: "I can connect you with sales@neurofive.com for exact pricing."
+6. If the question is off-topic, politely steer back to Neurofive products.
+7. Always end with a question.
+`;
+
+let messages = [
+  { role: "system", content: SYSTEM_PROMPT },
+  { role: "assistant", content: "Hi! I'm Ava from Neurofive Solutions 👋 How can I help you find the right product today?" }
+];
+
+async function sendMessage() {
+  const input = document.getElementById("userInput");
+  const chatBox = document.getElementById("chatBox");
+  const userText = input.value.trim();
+  if (!userText) return;
+
+  // Show user message
+  chatBox.innerHTML += `<div class="message user">${userText}</div>`;
+  messages.push({ role: "user", content: userText });
+  input.value = "";
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // Call OpenAI API
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: messages,
+        max_tokens: 200,
+        temperature: 0.8
+      })
+    });
+
+    const data = await response.json();
+    const avaReply = data.choices[0].message.content;
+    messages.push({ role: "assistant", content: avaReply });
+
+    // Show Ava's reply
+    chatBox.innerHTML += `<div class="message ava">${avaReply}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+  } catch (error) {
+    chatBox.innerHTML += `<div class="message ava">Sorry, I'm having trouble connecting. Please check your API key.</div>`;
+  }
+}
+
+// Send on Enter key
+document.getElementById("userInput").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") sendMessage();
+});
+</script>
+
+</body>
+</html>
