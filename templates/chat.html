@@ -38,14 +38,27 @@
             padding: 20px;
             border-radius: 15px 15px 0 0;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
         }
         
-        .chat-header h1 {
+        .ava-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header-text h1 {
             font-size: 28px;
             margin-bottom: 5px;
         }
         
-        .chat-header p {
+        .header-text p {
             font-size: 14px;
             opacity: 0.9;
         }
@@ -60,6 +73,7 @@
         .message {
             margin-bottom: 15px;
             display: flex;
+            gap: 10px;
             animation: fadeIn 0.3s ease-in;
         }
         
@@ -82,11 +96,30 @@
             justify-content: flex-start;
         }
         
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        
+        .message-bubble {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .message.user .message-bubble {
+            align-items: flex-end;
+        }
+        
         .message-content {
             max-width: 70%;
             padding: 12px 16px;
             border-radius: 12px;
             word-wrap: break-word;
+            line-height: 1.4;
         }
         
         .message.user .message-content {
@@ -191,14 +224,20 @@
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <h1>👋 Ava</h1>
-            <p>Neurofive Sales Assistant</p>
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ava" alt="Ava" class="ava-avatar">
+            <div class="header-text">
+                <h1>👋 Ava</h1>
+                <p>Neurofive Sales Assistant</p>
+            </div>
         </div>
         
         <div class="messages" id="messages">
             <div class="message ava">
-                <div class="message-content">
-                    Hi there! 👋 I'm Ava, your Neurofive Sales Assistant. How can I help you today? Are you looking for productivity tools, tech gadgets, or cloud solutions?
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ava" alt="Ava" class="message-avatar">
+                <div class="message-bubble">
+                    <div class="message-content">
+                        Hi there! 👋 I'm Ava, your Neurofive Sales Assistant. How can I help you today? Are you looking for productivity tools, tech gadgets, or cloud solutions?
+                    </div>
                 </div>
             </div>
         </div>
@@ -218,6 +257,7 @@
         const messagesDiv = document.getElementById('messages');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
+        const avaAvatarUrl = 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ava';
         
         function sendMessage() {
             const message = messageInput.value.trim();
@@ -262,9 +302,28 @@
         function addMessage(text, sender) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}`;
-            const contentClass = sender === 'user' ? 'message-content' : 
-                                 (text.includes('⚠️') ? 'message-content error-message' : 'message-content');
-            messageDiv.innerHTML = `<div class="${contentClass}">${escapeHtml(text)}</div>`;
+            
+            if (sender === 'ava') {
+                const avatar = document.createElement('img');
+                avatar.src = avaAvatarUrl;
+                avatar.alt = 'Ava';
+                avatar.className = 'message-avatar';
+                
+                const bubble = document.createElement('div');
+                bubble.className = 'message-bubble';
+                
+                const contentClass = text.includes('⚠️') ? 'message-content error-message' : 'message-content';
+                bubble.innerHTML = `<div class="${contentClass}">${escapeHtml(text)}</div>`;
+                
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(bubble);
+            } else {
+                const bubble = document.createElement('div');
+                bubble.className = 'message-bubble';
+                bubble.innerHTML = `<div class="message-content">${escapeHtml(text)}</div>`;
+                messageDiv.appendChild(bubble);
+            }
+            
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
@@ -273,7 +332,15 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message ava';
             messageDiv.id = 'loading';
-            messageDiv.innerHTML = `
+            
+            const avatar = document.createElement('img');
+            avatar.src = avaAvatarUrl;
+            avatar.alt = 'Ava';
+            avatar.className = 'message-avatar';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.innerHTML = `
                 <div class="message-content">
                     <div class="loading">
                         <span></span>
@@ -282,6 +349,9 @@
                     </div>
                 </div>
             `;
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(bubble);
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
