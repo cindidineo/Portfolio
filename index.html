@@ -1,30 +1,192 @@
 <!DOCTYPE html>
-<html lang=en>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ava - Neurofive Sales Assistant</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<meta name="viewport"
-content="width=device-width,initial-scale=2.0"
-</title>Portfolio</title>
-<link ref="stylesheet"href="style.css"
-     </head>
-     <body>
-<nav class="navbar">
-<div class="logo">PORTFOLIO OF DINEO Cindi</div>
-<ul class="menu"></Menu:toolbar>
-     <div class="card">
-          <nav>
-          <ul>
- <li class="active"><a href="index.html">Home</a></li>              
-<li><a href="about.html">About Me</a></li>
-<li><a href="projects.html">Projects</a></li>
-<li><a href="contact.html">Contact</a></li>
-</ul>
-</nav>
-Introduction
-<section class="home">
-    <h1>Hi,I'm Dineo Cindi</h1>
-    <p2 class="subheading">A passionate and dedicated student with a strong interest in technology and design. 
-     I am eager to learn and grow in the field of computer science, and I am committed to developing my skills and
-      knowledge to create innovative solutions that can make a positive impact on the world.</p2>
-    <img src="image.jpg" alt="Dineo Cindi">
-</section>
- 
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">🤖</span>
+                <span class="logo-text">Ava Assistant</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#features" class="nav-link">Features</a></li>
+                <li><a href="#products" class="nav-link">Products</a></li>
+                <li><a href="#chat" class="nav-link">Chat Now</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1>Meet Ava</h1>
+            <p class="hero-subtitle">Your AI-Powered Sales Assistant</p>
+            <p class="hero-description">Get instant answers about Neurofive products. Ava is here 24/7 to help you find the perfect solution.</p>
+            <a href="#chat" class="cta-button">Start Chatting Now</a>
+        </div>
+        <div class="hero-image">
+            <div class="avatar-circle">
+                <span class="avatar-text">👋</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="section-header">
+            <h2>Why Choose Ava?</h2>
+            <p>Intelligent, helpful, and always available</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Instant Responses</h3>
+                <p>Get answers to your questions in seconds, any time of day</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Personalized</h3>
+                <p>Ava asks questions to understand your needs and recommends the perfect product</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💼</div>
+                <h3>Professional</h3>
+                <p>Friendly yet professional assistance for all your business needs</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Secure</h3>
+                <p>Your conversations are private and protected with industry-standard encryption</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>AI-Powered</h3>
+                <p>Powered by advanced OpenAI technology for smart, contextual responses</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Always Available</h3>
+                <p>Works on desktop, tablet, and mobile - chat from anywhere</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="products">
+        <div class="section-header">
+            <h2>Neurofive Products</h2>
+            <p>Explore our solutions designed for your success</p>
+        </div>
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-icon">📱</div>
+                <h3>Neurofive App</h3>
+                <p>Productivity and AI tools for teams</p>
+                <ul class="product-features">
+                    <li>✓ Collaboration tools</li>
+                    <li>✓ AI-powered tasks</li>
+                    <li>✓ Team management</li>
+                </ul>
+            </div>
+            <div class="product-card">
+                <div class="product-icon">🛍️</div>
+                <h3>Neurofive Store</h3>
+                <p>Tech gadgets, headphones, smart watches, laptops</p>
+                <ul class="product-features">
+                    <li>✓ Latest gadgets</li>
+                    <li>✓ Premium quality</li>
+                    <li>✓ Fast shipping</li>
+                </ul>
+            </div>
+            <div class="product-card">
+                <div class="product-icon">☁️</div>
+                <h3>Neurofive Cloud</h3>
+                <p>Secure cloud storage and backup for businesses</p>
+                <ul class="product-features">
+                    <li>✓ Secure storage</li>
+                    <li>✓ Auto backups</li>
+                    <li>✓ 99.9% uptime</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chat Section -->
+    <section id="chat" class="chat-section">
+        <div class="chat-wrapper">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2>💬 Chat with Ava</h2>
+                    <p>Ask me anything about Neurofive products</p>
+                </div>
+                
+                <div class="messages" id="messages">
+                    <div class="message ava">
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-content">
+                            Hi there! 👋 I'm Ava, your Neurofive Sales Assistant. How can I help you today? Are you looking for productivity tools, tech gadgets, or cloud solutions?
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-area">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Type your message here..." 
+                        autocomplete="off"
+                    >
+                    <button id="sendBtn" onclick="sendMessage()" class="send-button">Send</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Ava Assistant</h4>
+                <p>Your AI-powered sales companion for Neurofive Solutions</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#products">Products</a></li>
+                    <li><a href="#chat">Chat</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <ul>
+                    <li>Email: sales@neurofive.com</li>
+                    <li>Phone: +1 (555) 000-0000</li>
+                    <li>Website: neurofive.com</li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <div class="social-links">
+                    <a href="#">Twitter</a>
+                    <a href="#">LinkedIn</a>
+                    <a href="#">Facebook</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Neurofive Solutions. All rights reserved. Built with ❤️ by Ava</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
