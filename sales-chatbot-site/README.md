@@ -1,19 +1,24 @@
-* Sales chatbot demo
+# Sales Chatbot Site
 
-This folder contains a static, client-side demo of the Sales chatbot "Ava" that mimics the behavior in your Python example without requiring an OpenAI API key.
+This folder contains a small full-stack example to run "AVA" — Neurofive's sales assistant — as a live site.
 
-Files:
-- index.html — single-page demo UI
-- style.css — styles
-- script.js — demo logic and canned responses
+Quick start (local):
 
-Quick preview (no setup):
-- Live preview URL (HTML preview):
-  https://htmlpreview.github.io/?https://raw.githubusercontent.com/cindidineo/Portfolio/main/sales-chatbot-site/index.html
+1. Install dependencies: `npm install` in the project root (`sales-chatbot-site`).
+2. Set environment variable: `OPENAI_API_KEY` with your OpenAI API key.
+3. Run: `npm start` and open http://localhost:3000
 
-Make it a GitHub Pages site:
-1. In your repository, go to Settings → Pages.
-2. Choose Branch: main and Folder: / (or /docs if you move these files into /docs).
-3. Save — GitHub Pages will publish at https://cindidineo.github.io/Portfolio/ (or a subpath).
+Deployment:
 
-If you want a real, live chatbot using OpenAI, I can add a small server function and deployment config — tell me and I'll scaffold it.
+- Deploy to Vercel (recommended): create a new Vercel project from this repo and set `OPENAI_API_KEY` in the Vercel project environment variables. The API endpoint is `https://<your-site>/api/chat`.
+
+Contact / Support
+
+- Sales email: sales@neurofive.com
+- Support: support@neurofive.com
+- Company site: https://neurofive.example.com
+
+Notes
+
+- Do NOT commit your OpenAI API key. Use environment variables.
+- This example uses the OpenAI HTTP API; you can swap to an official SDK if preferred.

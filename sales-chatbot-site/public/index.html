@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AVA — Neurofive Sales Assistant</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <img src="/ava-avatar.png" alt="AVA" class="avatar" onerror="this.style.display='none'">
+      <div>
+        <h1>AVA</h1>
+        <p class="tag">Neurofive Sales Assistant</p>
+      </div>
+    </div>
+    <div class="contact">sales@neurofive.com • support@neurofive.com</div>
+  </header>
+
+  <main class="chat-app">
+    <section id="messages" class="messages"></section>
+
+    <form id="chatForm" class="composer">
+      <input id="input" autocomplete="off" placeholder="Ask AVA about Neurofive products..." />
+      <button type="submit">Send</button>
+    </form>
+
+    <div class="suggestions">
+      <button class="quick">Tell me about Neurofive App</button>
+      <button class="quick">What gadgets are in the Store?</button>
+      <button class="quick">How does Neurofive Cloud work?</button>
+    </div>
+
+    <section class="company">
+      <h2>About Neurofive</h2>
+      <p>Neurofive builds productivity tools, great tech products, and secure business cloud services. Need personalized pricing or an enterprise conversation? Email sales@neurofive.com and we'll connect you with a specialist.</p>
+      <p>Website: <a href="https://neurofive.example.com">neurofive.example.com</a></p>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+
+    function addMessage(who, text) {
+      const el = document.createElement('div');
+      el.className = 'msg ' + who;
+      el.innerText = text;
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    async function sendMessage(text) {
+      addMessage('user', text);
+      addMessage('loading', 'AVA is typing...');
+      try {
+        const r = await fetch('/api/chat', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ message: text })
+        });
+        const data = await r.json();
+        const loading = document.querySelector('.msg.loading');
+        if (loading) loading.remove();
+        if (data && data.reply) addMessage('ava', data.reply);
+        else addMessage('ava', 'Sorry, I could not get a response.');
+      } catch (err) {
+        const loading = document.querySelector('.msg.loading');
+        if (loading) loading.remove();
+        addMessage('ava', 'Network error. Please try again later.');
+      }
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const v = input.value.trim();
+      if (!v) return;
+      input.value = '';
+      sendMessage(v);
+    });
+
+    document.querySelectorAll('.quick').forEach(b => b.addEventListener('click', () => {
+      const q = b.innerText;
+      input.value = q;
+      sendMessage(q);
+    }));
+
+    // Welcome message
+    addMessage('ava', 'Hi — I\'m AVA! I can help you with Neurofive App, Store, and Cloud. How can I assist today?');
+  </script>
+</body>
+</html>
