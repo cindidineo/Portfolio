@@ -17,17 +17,95 @@
     min-height: 100vh; 
     padding: 20px;
   }
+
+  .wrapper {
+    width: 100%;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeInDown 0.8s ease-out;
+  }
+
+  .header h1 {
+    font-size: 48px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header p {
+    font-size: 18px;
+    color: #cbd5e1;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: center;
+  }
+
+  .features {
+    animation: fadeInLeft 0.8s ease-out;
+  }
+
+  .features h2 {
+    font-size: 32px;
+    margin-bottom: 20px;
+    color: #f1f5f9;
+  }
+
+  .feature-item {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #334155;
+    transition: all 0.3s ease;
+  }
+
+  .feature-item:hover {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.1);
+    transform: translateX(5px);
+  }
+
+  .feature-item h3 {
+    color: #60a5fa;
+    margin-bottom: 8px;
+    font-size: 16px;
+  }
+
+  .feature-item p {
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .chat-wrapper {
+    animation: fadeInRight 0.8s ease-out;
+  }
   
   .chat-container { 
     width: 100%; 
-    max-width: 450px; 
-    height: 600px; 
+    max-width: 500px;
+    height: 650px; 
     background: #1e293b; 
     border-radius: 16px; 
     display: flex; 
     flex-direction: column; 
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
     border: 1px solid #334155;
+    margin: 0 auto;
   }
   
   .chat-header { 
@@ -54,6 +132,39 @@
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
+  }
+
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes fadeInRight {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
   
   .chat-box { 
@@ -182,14 +293,6 @@
     transform: none;
   }
   
-  .error-message {
-    background: #dc2626;
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin: 10px;
-    font-size: 14px;
-  }
-  
   .config-note {
     background: #f59e0b;
     color: #000;
@@ -198,6 +301,7 @@
     margin: 10px;
     font-size: 13px;
     display: none;
+    font-weight: 500;
   }
   
   .config-note.show {
@@ -220,24 +324,134 @@
   ::-webkit-scrollbar-thumb:hover {
     background: #475569;
   }
+
+  .cta-section {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 1px solid #334155;
+  }
+
+  .cta-section h3 {
+    font-size: 24px;
+    margin-bottom: 15px;
+    color: #f1f5f9;
+  }
+
+  .cta-section p {
+    color: #cbd5e1;
+    margin-bottom: 20px;
+    font-size: 16px;
+  }
+
+  .cta-button {
+    display: inline-block;
+    padding: 14px 32px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+
+    .header h1 {
+      font-size: 36px;
+    }
+
+    .features h2 {
+      font-size: 24px;
+    }
+
+    .chat-container {
+      height: 500px;
+      max-width: 100%;
+    }
+  }
 </style>
 </head>
 <body>
 
-<div class="chat-container">
-  <div class="chat-header">
-    <div class="status-indicator"></div>
-    Ava - Neurofive Sales Assistant
+<div class="wrapper">
+  <div class="header">
+    <h1>Ava Sales Assistant</h1>
+    <p>Meet your AI-powered sales companion powered by Neurofive Solutions. Get instant product recommendations and support.</p>
   </div>
-  <div class="config-note" id="configNote">
-    ⚠️ API Key not configured. Add your OpenAI API key to make the chatbot work.
+
+  <div class="container">
+    <div class="features">
+      <h2>Why Choose Ava?</h2>
+      
+      <div class="feature-item">
+        <h3>🚀 Instant Recommendations</h3>
+        <p>Get personalized product suggestions based on your needs within seconds.</p>
+      </div>
+
+      <div class="feature-item">
+        <h3>💼 Professional Support</h3>
+        <p>Warm, consultative assistance from an AI trained on Neurofive's entire product suite.</p>
+      </div>
+
+      <div class="feature-item">
+        <h3>🔒 Secure & Private</h3>
+        <p>Your conversations are secure. API keys stored locally, never shared.</p>
+      </div>
+
+      <div class="feature-item">
+        <h3>⚡ 24/7 Available</h3>
+        <p>Chat with Ava anytime, anywhere. Always ready to help with your questions.</p>
+      </div>
+
+      <div class="feature-item">
+        <h3>📱 Mobile Friendly</h3>
+        <p>Works seamlessly across all devices - desktop, tablet, and mobile.</p>
+      </div>
+
+      <div class="feature-item">
+        <h3>🎯 Sales Focused</h3>
+        <p>Get pricing info, demos, and next steps from a knowledgeable sales assistant.</p>
+      </div>
+    </div>
+
+    <div class="chat-wrapper">
+      <div class="chat-container">
+        <div class="chat-header">
+          <div class="status-indicator"></div>
+          Ava - Sales Assistant
+        </div>
+        <div class="config-note" id="configNote">
+          ⚠️ To use Ava, add your OpenAI API key. See instructions below.
+        </div>
+        <div class="chat-box" id="chatBox">
+          <div class="message ava">Hi! I'm Ava from Neurofive Solutions 👋 How can I help you find the right product today?</div>
+        </div>
+        <div class="chat-input">
+          <input type="text" id="userInput" placeholder="Type your message..." />
+          <button id="sendBtn" onclick="sendMessage()">Send</button>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="chat-box" id="chatBox">
-    <div class="message ava">Hi! I'm Ava from Neurofive Solutions 👋 How can I help you find the right product today?</div>
-  </div>
-  <div class="chat-input">
-    <input type="text" id="userInput" placeholder="Type your message..." />
-    <button id="sendBtn" onclick="sendMessage()">Send</button>
+
+  <div class="cta-section">
+    <h3>Ready to Get Started?</h3>
+    <p>To use Ava, you'll need an OpenAI API key. Open your browser's developer console (F12) and paste:</p>
+    <p style="color: #60a5fa; font-family: monospace; background: #1e293b; padding: 12px; border-radius: 8px; margin: 20px auto; max-width: 600px;">setApiKey("sk-your-openai-api-key-here")</p>
+    <button class="cta-button" onclick="showSetupGuide()">📖 Setup Guide</button>
   </div>
 </div>
 
@@ -307,6 +521,7 @@ async function sendMessage() {
   if (!checkApiKey()) {
     const chatBox = document.getElementById("chatBox");
     chatBox.innerHTML += `<div class="message ava">⚠️ API Key not configured. Please set your OpenAI API key to use this chatbot.</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
     return;
   }
 
@@ -393,15 +608,52 @@ document.getElementById("userInput").addEventListener("keypress", function(e) {
 // Check API key on load
 window.addEventListener("load", checkApiKey);
 
-// Allow setting API key via URL parameter or localStorage
+// Allow setting API key via console or function call
 function setApiKey(key) {
   CONFIG.API_KEY = key;
   localStorage.setItem("openai_api_key", key);
   checkApiKey();
+  console.log("✅ API Key saved! Ava is now ready to chat.");
 }
 
-// Expose for debugging
+// Setup guide
+function showSetupGuide() {
+  const guide = `
+SETUP GUIDE FOR AVA
+==================
+
+1. Get an OpenAI API Key:
+   - Visit: https://platform.openai.com/api-keys
+   - Create a new API key
+   - Copy it
+
+2. Add the key to Ava:
+   - Open this page in your browser
+   - Press F12 to open Developer Console
+   - Paste this command and hit Enter:
+   
+   setApiKey("sk-your-api-key-here")
+   
+   Replace "sk-your-api-key-here" with your actual key
+
+3. Start chatting:
+   - Refresh the page
+   - Type your first message
+   - Ava will respond!
+
+4. Your key is stored locally:
+   - Saved in browser localStorage
+   - Never sent anywhere except to OpenAI
+   - Safe to use
+
+Questions? Visit https://neurofive.com
+  `;
+  alert(guide);
+}
+
+// Expose for global use
 window.setApiKey = setApiKey;
+window.showSetupGuide = showSetupGuide;
 </script>
 
 </body>
