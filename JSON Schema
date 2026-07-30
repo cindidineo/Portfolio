@@ -1,0 +1,185 @@
+{
+  "name": "string",
+  "email": "string",
+  "issue_type": "string",
+  "urgency": "low | medium | high",
+  "summary": "string"
+}
+You are a data extraction API.
+Your ONLY job is to extract information from the user message and return VALID JSON.
+Do NOT add explanations, markdown, or extra text. Only return JSON.
+
+Schema to follow exactly:
+{
+  "name": "string or null",
+  "email": "string or null",
+  "issue_type": "string",
+  "urgency": "low, medium, or high",
+  "summary": "string, max 20 words"
+}
+
+Rules:
+1. If info is missing, use null
+2. urgency must be one of: low, medium, high
+3. Output ONLY valid JSON
+# requirements: pip install openai python-dotenv json
+
+import os
+import json
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+SYSTEM_PROMPT = """
+You are a data extraction API.
+Your ONLY job is to extract information from the user message and return VALID JSON.
+Do NOT add explanations, markdown, or extra text. Only return JSON.
+
+Schema to follow exactly:
+{
+  "name": "string or null",
+  "email": "string or null",
+  "issue_type": "string",
+  "urgency": "low, medium, or high",
+  "summary": "string, max 20 words"
+}
+
+Rules:
+1. If info is missing, use null
+2. urgency must be one of: low, medium, high
+3. Output ONLY valid JSON
+"""
+
+def extract_json(user_message):
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_message}
+        ],
+        temperature=0,
+        response_format={"type": "json_object"} # This forces JSON mode
+    )
+    return response.choices[0].message.content
+
+# 5 Test Inputs
+test_cases = [
+    "Hi, I'm Dineo Cindi, dineo793@gmail.com. My laptop won't turn on and I need it fixed ASAP for work tomorrow!",
+    "Hello support. Email: test@company.com. Can't login to the portal. Not urgent.",
+    "URGENT!!! Website is down. Contact me at sarah@mail.com. Name is Sarah.",
+    "My printer is jamming. - John", # missing email
+    "asdf lkjasd 123!!! help me now!!!" # messy/tricky input to "break" it
+]
+
+print("TESTING JSON EXTRACTION\n")
+for i, msg in enumerate(test_cases, 1):
+    print(f"--- Test {i} ---")
+    print("Input:", msg)
+    raw_output = extract_json(msg)
+    print("Raw LLM Output:", raw_output)
+
+    try:
+        parsed = json.loads(raw_output) # verify it parses
+        print("✅ Valid JSON Parsed:", parsed)
+    except json.JSONDecodeError:
+        print("❌ BROKE: Invalid JSON")
+    print()
+
+print("Grounding the LLM to JSON made the output predictable and plug-and-play.")
+print("Without JSON mode + strict prompt, the model adds text. With it, we get clean data that can go straight into a database or API.")
+# requirements: pip install requests python-dotenv
+
+import requests
+import time
+import json
+from datetime import datetime
+import os
+
+# CONFIG
+WEBSITE_URL = "https://www.google.com"  # change this to the site you want to monitor
+CHECK_INTERVAL_SECONDS = 30  # check every 30 seconds
+TIMEOUT_SECONDS = 5
+LOG_FILE = "website_status_log.json"
+
+def check_website(url):
+    """Check if website is up and return structured JSON"""
+    timestamp = datetime.now().isoformat()
+    try:
+        response = requests.get(url, timeout=TIMEOUT_SECONDS)
+        status_code = response.status_code
+        is_up = 200 <= status_code < 400
+        
+        result = {
+            "timestamp": timestamp,
+            "url": url,
+            "status": "up" if is_up else "down",
+            "status_code": status_code,
+            "response_time_ms": round(response.elapsed.total_seconds() * 1000, 2),
+            "error": None
+        }
+        
+    except requests.exceptions.RequestException as e:
+        result = {
+            "timestamp": timestamp,
+            "url": url,
+            "status": "down",
+            "status_code": None,
+            "response_time_ms": None,
+            "error": str(e)
+        }
+    
+    return result
+
+def save_log(entry):
+    """Append JSON entry to log file"""
+    logs = []
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r") as f:
+            try:
+                logs = json.load(f)
+            except json.JSONDecodeError:
+                logs = []
+    
+    logs.append(entry)
+    
+    with open(LOG_FILE, "w") as f:
+        json.dump(logs, f, indent=2)
+
+def send_alert(entry):
+    """Simple alert - prints to console. You can swap this for email/Slack"""
+    if entry["status"] == "down":
+        print(f"\n🚨 ALERT: {entry['url']} IS DOWN!")
+        print(f"Time: {entry['timestamp']}")
+        print(f"Error: {entry['error']}")
+        print("="*50)
+
+# MAIN LOOP
+print(f"Starting monitor for {WEBSITE_URL}")
+print(f"Checking every {CHECK_INTERVAL_SECONDS} seconds. Press Ctrl+C to stop.\n")
+
+last_status = "up"
+
+while True:
+    result = check_website(WEBSITE_URL)
+    save_log(result)
+    
+    # Print current status
+    emoji = "✅" if result["status"] == "up" else "❌"
+    print(f"{emoji} {result['timestamp']} | {result['status'].upper()} | Code: {result['status_code']} | {result['response_time_ms']}ms")
+    
+    # Send alert only when status changes to down
+    if result["status"] == "down" and last_status == "up":
+        send_alert(result)
+    
+    last_status = result["status"]
+    time.sleep(CHECK_INTERVAL_SECONDS)
+{
+  "timestamp": "2026-07-30T21:05:12",
+  "url": "https://www.google.com",
+  "status": "down",
+  "status_code": null,
+  "response_time_ms": null,
+  "error": "Connection timed out"
+}
