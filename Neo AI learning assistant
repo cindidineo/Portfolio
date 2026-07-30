@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neo - AI Learning Assistant</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+  body { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: #fff; }
+  header { padding: 20px; text-align: center; background: rgba(0,0,0,0.2); }
+  header h1 { font-size: 2.2rem; }
+  header p { font-size: 1rem; opacity: 0.9; }
+  nav { display: flex; justify-content: center; gap: 20px; padding: 15px; background: rgba(0,0,0,0.3); }
+  nav a { color: #fff; text-decoration: none; font-weight: 600; }
+  .container { max-width: 900px; margin: 30px auto; padding: 20px; }
+  .chat-box { background: #fff; color: #333; border-radius: 15px; padding: 20px; height: 400px; overflow-y: auto; margin-bottom: 15px; }
+  .msg { margin: 10px 0; padding: 10px 15px; border-radius: 10px; max-width: 80%; }
+  .user { background: #2575fc; color: #fff; margin-left: auto; }
+  .neo { background: #eee; color: #333; margin-right: auto; }
+  .input-area { display: flex; gap: 10px; }
+  .input-area input { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 1rem; }
+  .input-area button { padding: 12px 20px; border: none; border-radius: 10px; background: #6a11cb; color: #fff; font-weight: bold; cursor: pointer; }
+  footer { text-align: center; padding: 20px; background: rgba(0,0,0,0.3); margin-top: 40px; }
+  footer p { margin: 5px 0; }
+  @media(max-width: 600px) { header h1 { font-size: 1.5rem; } .chat-box { height: 300px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🤖 Meet Neo</h1>
+  <p>Your 24/7 AI Learning Assistant for School & Varsity Students</p>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="english-levels.html">English Levels</a>
+</nav>
+
+<div class="container">
+  <h2>Ask Neo Anything 📚</h2>
+  <p>Stuck on Math, Science, History, or need help with an essay? Ask me!</p>
+  
+  <div class="chat-box" id="chatBox">
+    <div class="msg neo">Hi! I'm Neo 👋 I'm here to help you with any subject, any grade. What do you want to learn today?</div>
+  </div>
+
+  <div class="input-area">
+    <input type="text" id="userInput" placeholder="Ask: Explain photosynthesis for Grade 7...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<footer>
+  <h3>Contact Neo Support</h3>
+  <p>Email: <a href="mailto:cindidino793@mail.com" style="color:#fff;">cindidino793@mail.com</a></p>
+  <p>WhatsApp/Call: <a href="tel:0652593795" style="color:#fff;">065 259 3795</a></p>
+  <p>© 2026 Neo AI Assistant. Made for learners.</p>
+</footer>
+
+<script>
+// Simple demo chat - Replace this with OpenAI API later
+function sendMessage() {
+  const input = document.getElementById("userInput");
+  const chatBox = document.getElementById("chatBox");
+  if (input.value.trim() === "") return;
+
+  // Show user message
+  chatBox.innerHTML += `<div class="msg user">${input.value}</div>`;
+  
+  // Neo reply - demo logic
+  let reply = "That's a great question! ";
+  if (input.value.toLowerCase().includes("math")) reply += "Let's solve it step by step. What grade are you in?";
+  else if (input.value.toLowerCase().includes("english")) reply += "I can help with grammar, essays, and vocabulary. Check the 'English Levels' page too!";
+  else reply += "I'm Neo and I can explain any topic simply. Can you tell me your grade and subject?";
+
+  setTimeout(() => {
+    chatBox.innerHTML += `<div class="msg neo">${reply}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }, 600);
+
+  input.value = "";
+}
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Levels - Neo AI</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+  body { background: #f4f7ff; color: #333; }
+  header { padding: 20px; text-align: center; background: #2575fc; color: #fff; }
+  nav { display: flex; justify-content: center; gap: 20px; padding: 15px; background: #6a11cb; }
+  nav a { color: #fff; text-decoration: none; font-weight: 600; }
+  .container { max-width: 1000px; margin: 30px auto; padding: 20px; }
+  .level-card { background: #fff; padding: 20px; margin: 15px 0; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+  .level-card h3 { color: #2575fc; margin-bottom: 10px; }
+  footer { text-align: center; padding: 20px; background: #2575fc; color: #fff; margin-top: 40px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📖 English Language Levels</h1>
+  <p>Learn words and skills for every stage with Neo</p>
+</header>
+
+<nav>
+  <a href="index.html">Home</a>
+  <a href="english-levels.html">English Levels</a>
+</nav>
+
+<div class="container">
+  <div class="level-card">
+    <h3>Beginner - A1</h3>
+    <p><b>Who:</b> Grade R - 3, New English learners</p>
+    <p><b>Focus:</b> Basic words, alphabet, simple sentences. "I am", "The cat is big"</p>
+    <p><b>Goal:</b> Understand and use 500+ common words</p>
+  </div>
+
+  <div class="level-card">
+    <h3>Elementary - A2</h3>
+    <p><b>Who:</b> Grade 4 - 6</p>
+    <p><b>Focus:</b> Daily conversation, past/present tense, 1000+ words</p>
+    <p><b>Goal:</b> Describe family, school, and hobbies</p>
+  </div>
+
+  <div class="level-card">
+    <h3>Intermediate - B1</h3>
+    <p><b>Who:</b> Grade 7 - 9, High School</p>
+    <p><b>Focus:</b> Essays, comprehension, 2000+ words. Express opinions</p>
+    <p><b>Goal:</b> Handle school subjects in English</p>
+  </div>
+
+  <div class="level-card">
+    <h3>Upper-Intermediate - B2</h3>
+    <p><b>Who:</b> Grade 10 - 12</p>
+    <p><b>Focus:</b> Complex grammar, debates, academic writing</p>
+    <p><b>Goal:</b> Prepare for Matric exams</p>
+  </div>
+
+  <div class="level-card">
+    <h3>Advanced - C1</h3>
+    <p><b>Who:</b> Varsity / University Students</p>
+    <p><b>Focus:</b> Research papers, presentations, 5000+ words</p>
+    <p><b>Goal:</b> Fluent academic and professional English</p>
+  </div>
+
+  <div class="level-card">
+    <h3>Proficiency - C2</h3>
+    <p><b>Who:</b> Postgrad / Teachers</p>
+    <p><b>Focus:</b> Nuance, idioms, teaching others</p>
+    <p><b>Goal:</b> Near-native mastery</p>
+  </div>
+</div>
+
+<footer>
+  <p>Need help at your level? <a href="index.html" style="color:#fff;">Ask Neo</a></p>
+  <p>Contact: cindidino793@mail.com | 065 259 3795</p>
+</footer>
+
+</body>
+</html>
+// Example: call your backend /api/chat with the question
+fetch('/api/chat', { method: 'POST', body: JSON.stringify({q: input.value})})
