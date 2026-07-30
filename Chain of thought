@@ -1,0 +1,20 @@
+A company has R120,000 budget. Option A: Hire 2 junior devs at R25,000 each per month. Option B: Hire 1 senior dev at R50,000 per month + spend R20,000 on AI tools. The project is 3 months long. Which option gives more value and why?
+
+You are a senior business analyst and financial consultant. 
+Think step-by-step before answering.
+
+A company has R120,000 budget. Option A: Hire 2 junior devs at R25,000 each per month. Option B: Hire 1 senior dev at R50,000 per month + spend R20,000 on AI tools. The project is 3 months long. Which option gives more value and why?
+
+Show your calculations and reasoning clearly.
+Adding Chain-of-Thought and a persona prompt significantly improved the result. 
+The plain prompt gave a vague answer with no calculations. 
+The CoT + "senior business analyst" prompt forced step-by-step budgeting, showed the math, and gave a structured recommendation. 
+This proves that persona + reasoning instructions make the AI more accurate, logical, and useful for real business decisions.
+Just completed the Neurofive Solutions AI Task: Chain-of-Thought + Persona Prompting 🚀
+
+I compared a plain prompt vs a CoT + "senior business analyst" prompt on a budget decision. 
+The difference was huge. CoT forced the model to do step-by-step math and give a structured recommendation instead of guessing.
+
+This shows how prompting technique directly impacts AI quality and reliability in business.
+
+#AI #PromptEngineering #NeurofiveSolutions #ChainOfThought
