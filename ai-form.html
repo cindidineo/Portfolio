@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Customer Support Form</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .form-wrapper {
+            padding: 40px 30px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #f9f9f9;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            max-height: 250px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .ai-response {
+            display: none;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .response-section {
+            margin-bottom: 20px;
+        }
+
+        .response-section h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .response-content {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .category-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .success-message {
+            display: none;
+            background: #4caf50;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .error-message {
+            display: none;
+            background: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .char-count {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #1565c0;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .form-wrapper {
+                padding: 25px 20px;
+            }
+
+            .submit-btn {
+                font-size: 14px;
+            }
+        }
+
+        .draft-reply-box {
+            background: #f0f7ff;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .copy-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 AI Support Assistant</h1>
+            <p>Get instant AI-powered responses to your inquiries</p>
+        </div>
+
+        <!-- Form Content -->
+        <div class="form-wrapper">
+            <!-- Status Messages -->
+            <div class="success-message" id="successMessage">
+                ✅ Your inquiry has been processed successfully!
+            </div>
+            <div class="error-message" id="errorMessage"></div>
+
+            <!-- Form -->
+            <form id="supportForm">
+                <!-- Name Field -->
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        placeholder="Enter your full name"
+                        required
+                        minlength="2"
+                    >
+                </div>
+
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="your.email@example.com"
+                        required
+                    >
+                </div>
+
+                <!-- Subject Field -->
+                <div class="form-group">
+                    <label for="subject">Subject *</label>
+                    <input 
+                        type="text" 
+                        id="subject" 
+                        name="subject" 
+                        placeholder="Brief description of your issue"
+                        required
+                        minlength="3"
+                    >
+                </div>
+
+                <!-- Message Field -->
+                <div class="form-group">
+                    <label for="message">Message *</label>
+                    <textarea 
+                        id="message" 
+                        name="message" 
+                        placeholder="Please describe your issue or question in detail..."
+                        required
+                        minlength="10"
+                    ></textarea>
+                    <div class="char-count">
+                        <span id="charCount">0</span> / 1000 characters
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span id="submitText">Analyze with AI</span>
+                    <div class="loading-spinner" id="spinner"></div>
+                </button>
+            </form>
+
+            <!-- Info Box -->
+            <div class="info-box">
+                💡 <strong>Tip:</strong> Provide detailed information for more accurate AI analysis and response suggestions.
+            </div>
+
+            <!-- AI Response Section -->
+            <div class="ai-response" id="aiResponse">
+                <!-- Category -->
+                <div class="response-section">
+                    <h3>📂 Category</h3>
+                    <div class="category-badge" id="categoryBadge">General</div>
+                </div>
+
+                <!-- Summary -->
+                <div class="response-section">
+                    <h3>📝 AI Summary</h3>
+                    <div class="response-content" id="summaryContent">
+                        Loading summary...
+                    </div>
+                </div>
+
+                <!-- Draft Reply -->
+                <div class="response-section">
+                    <h3>💬 AI-Generated Response</h3>
+                    <div class="response-content" id="draftReplyContent">
+                        Loading response...
+                    </div>
+                    <button class="copy-btn" onclick="copyToClipboard()">📋 Copy Response</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // FORM SUBMISSION & AI INTEGRATION
+        // ============================================================
+        const form = document.getElementById('supportForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('spinner');
+        const submitText = document.getElementById('submitText');
+        const aiResponse = document.getElementById('aiResponse');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const charCountSpan = document.getElementById('charCount');
+        const messageInput = document.getElementById('message');
+
+        // Character count
+        messageInput.addEventListener('input', function() {
+            charCountSpan.textContent = this.value.length;
+        });
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Reset messages
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+            aiResponse.style.display = 'none';
+
+            // Get form data
+            const formData = {
+                timestamp: new Date(),
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                subject: document.getElementById('subject').value.trim(),
+                message: document.getElementById('message').value.trim()
+            };
+
+            // Validate
+            if (!validateForm(formData)) {
+                showError('Please fill in all required fields correctly.');
+                return;
+            }
+
+            // Show loading state
+            submitBtn.disabled = true;
+            spinner.style.display = 'block';
+            submitText.textContent = 'Processing...';
+
+            try {
+                // Call AI function
+                const response = await getAIResponse(formData);
+                
+                // Display results
+                displayAIResponse(response);
+                successMessage.style.display = 'block';
+                
+                // Reset form
+                form.reset();
+                charCountSpan.textContent = '0';
+                
+            } catch (error) {
+                showError(error.message || 'An error occurred while processing your request.');
+                console.error('Error:', error);
+            } finally {
+                // Reset button
+                submitBtn.disabled = false;
+                spinner.style.display = 'none';
+                submitText.textContent = 'Analyze with AI';
+            }
+        });
+
+        // ============================================================
+        // VALIDATION
+        // ============================================================
+        function validateForm(data) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!data.name || data.name.length < 2) return false;
+            if (!emailRegex.test(data.email)) return false;
+            if (!data.subject || data.subject.length < 3) return false;
+            if (!data.message || data.message.length < 10) return false;
+            
+            return true;
+        }
+
+        // ============================================================
+        // AI RESPONSE (Simulated - Replace with actual API call)
+        // ============================================================
+        async function getAIResponse(formData) {
+            // For demo purposes, this simulates the AI response
+            // In production, connect this to your Google Apps Script web app
+            
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // Simulate AI analysis
+                    const categories = ['Technical', 'Billing', 'Sales', 'Account', 'General'];
+                    const category = categories[Math.floor(Math.random() * categories.length)];
+                    
+                    resolve({
+                        category: category,
+                        summary: `Customer ${formData.name} has contacted us regarding: ${formData.subject}. They report experiencing issues and require assistance.`,
+                        draft_reply: `Hello ${formData.name},\n\nThank you for reaching out to us. We have received your message regarding "${formData.subject}" and understand your concern.\n\nOur team will review your inquiry and get back to you within 24 hours. We appreciate your patience and will do our best to resolve this matter promptly.\n\nBest regards,\nSupport Team`
+                    });
+                }, 1500);
+            });
+        }
+
+        // ============================================================
+        // DISPLAY AI RESPONSE
+        // ============================================================
+        function displayAIResponse(response) {
+            document.getElementById('categoryBadge').textContent = response.category;
+            document.getElementById('summaryContent').textContent = response.summary;
+            document.getElementById('draftReplyContent').innerHTML = `
+                <div class="draft-reply-box">
+                    ${response.draft_reply.replace(/\n/g, '<br>')}
+                </div>
+            `;
+            aiResponse.style.display = 'block';
+            aiResponse.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ============================================================
+        // ERROR HANDLING
+        // ============================================================
+        function showError(message) {
+            errorMessage.textContent = '❌ ' + message;
+            errorMessage.style.display = 'block';
+        }
+
+        // ============================================================
+        // COPY TO CLIPBOARD
+        // ============================================================
+        function copyToClipboard() {
+            const draftReply = document.getElementById('draftReplyContent').innerText;
+            navigator.clipboard.writeText(draftReply).then(() => {
+                alert('✅ Response copied to clipboard!');
+            }).catch(() => {
+                alert('❌ Failed to copy to clipboard');
+            });
+        }
+
+        // ============================================================
+        // INITIALIZE
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('✅ AI Form loaded and ready');
+        });
+    </script>
+</body>
+</html>
