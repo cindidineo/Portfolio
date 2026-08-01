@@ -1,146 +1,297 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RAG Chat - Dineo Cindi CV</title>
-<style>
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: #f4f7fa;
-        margin: 0;
-        padding: 20px;
-        display: flex;
-        justify-content: center;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>RAG Chat — Dineo Cindi CV</title>
+  <meta name="description" content="RAG Chat demo — answers only from Dineo Cindi's CV. Prevents hallucinations by only answering from the CV." />
+  <meta property="og:title" content="RAG Chat — Dineo Cindi CV" />
+  <meta property="og:description" content="Demo showing Retrieval-Augmented Generation grounded only in the CV document." />
+  <meta name="twitter:card" content="summary" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';" />
+
+  <style>
+    :root {
+      --accent: #2563eb;
+      --muted: #64748b;
+      --bg: #f4f7fa;
+      --card: #fff;
+      --radius: 12px;
+      --max-width: 880px;
+    }
+    html,body {
+      height: 100%;
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: #0f172a;
+    }
+    .page {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
     }
     .container {
-        max-width: 800px;
-        width: 100%;
-        background: white;
-        padding: 30px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: var(--max-width);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 6px 20px rgba(2,6,23,0.08);
+      padding: 28px;
+      box-sizing: border-box;
     }
-    h1 {
-        color: #2563eb;
-        text-align: center;
-        margin-bottom: 10px;
+    header h1 { color: var(--accent); margin: 0 0 6px 0; font-size: 1.6rem;}
+    .subtitle { color: var(--muted); margin: 0 0 18px 0; font-size: 0.95rem }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      align-items: center;
     }
-    .subtitle {
-        text-align: center;
-        color: #64748b;
-        margin-bottom: 25px;
-        font-size: 14px;
+    .controls input[type="search"]{
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #e6eefb;
+      background: #fbfdff;
+      outline: none;
     }
+    .controls button {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #e6eefb;
+      background: #f8fafc;
+      color: #0f172a;
+      cursor: pointer;
+    }
+    .qa-list { margin-top: 6px; display:block; }
     .question-btn {
-        display: block;
-        width: 100%;
-        text-align: left;
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        padding: 15px;
-        margin-bottom: 10px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        transition: 0.2s;
+      display: flex;
+      width: 100%;
+      text-align: left;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      padding: 14px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background .15s ease, border-color .15s ease;
+      align-items: center;
+      gap: 8px;
     }
-    .question-btn:hover {
-        background: #dbeafe;
-        border-color: #93c5fd;
-    }
+    .question-btn:focus { outline: 3px solid rgba(37,99,235,0.18); }
+    .question-btn:hover { background: #dbeafe; border-color: #93c5fd; }
     .answer {
-        display: none;
-        background: #f8fafc;
-        border-left: 4px solid #2563eb;
-        padding: 15px;
-        margin: -5px 0 15px 0;
-        border-radius: 0 8px 8px 8px;
-        white-space: pre-line;
-        line-height: 1.6;
+      display: none;
+      background: #f8fafc;
+      border-left: 4px solid var(--accent);
+      padding: 14px;
+      margin: -6px 0 12px 0;
+      border-radius: 0 8px 8px 8px;
+      white-space: pre-line;
+      line-height: 1.6;
     }
-    .answer.show {
-        display: block;
+    .answer.show { display: block; }
+    .meta { font-size: 13px; color: var(--muted); margin-top: 8px; font-style: italic; }
+    footer { margin-top: 18px; font-size: 13px; color:#94a3b8; text-align:center; }
+    .copy-btn {
+      margin-left: auto;
+      background: transparent;
+      border: 0;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
     }
-    .source {
-        font-size: 12px;
-        color: #64748b;
-        margin-top: 8px;
-        font-style: italic;
+    @media (max-width:600px){
+      .controls{ flex-direction: column; align-items: stretch; }
+      .controls button{ width:100% }
     }
-    footer { text-align: center; color: #94a3b8; font-size: 13px; margin-top: 20px; }
-</style>
+  </style>
 </head>
 <body>
-<div class="container">
-    <h1>RAG Chat: Dineo Cindi CV</h1>
-    <p class="subtitle">Answers are only retrieved from the CV document. This simulates Retrieval-Augmented Generation.</p>
+  <div class="page">
+    <main class="container" id="main" role="main">
+      <header>
+        <h1>RAG Chat: Dineo Cindi CV</h1>
+        <p class="subtitle">Answers are only retrieved from the CV document. This demonstrates Retrieval-Augmented Generation (RAG).</p>
+      </header>
 
-    <div id="qa-container"></div>
+      <div class="controls" role="region" aria-label="Controls">
+        <input id="search" type="search" placeholder="Search questions..." aria-label="Search questions" />
+        <button id="expandAll" type="button">Expand all</button>
+        <button id="collapseAll" type="button">Collapse all</button>
+      </div>
 
-    <footer>Demo: This page is generated from a small in-page knowledge base (the CV). It prevents hallucinations by only answering from that CV.</footer>
+      <section id="qa-container" class="qa-list" aria-live="polite"></section>
 
-</div>
+      <footer>
+        Demo: This page is generated from an in-page knowledge base (the CV). It prevents hallucinations by answering only from that CV.
+      </footer>
+    </main>
+  </div>
 
-<script>
-// Knowledge base (sourced from the CV document)
-const cv_knowledge_base = {
-    "What are my top 5 technical skills and tools listed on my CV?": 
-`- Microsoft 365 Suite: Specifically Excel, Word, PowerPoint, and Outlook
+  <script>
+    // In-page knowledge base (sourced from the CV). Keep this static for grounding.
+    const cvKnowledge = [
+      {
+        q: "What are my top 5 technical skills and tools listed on my CV?",
+        a: `- Microsoft 365 Suite: Specifically Excel, Word, PowerPoint, and Outlook
 - Web Development: Proficiency in HTML and CSS
 - AI & Prompting: Skills in AI prompting and AI engineering basics
 - IT Support & Administration: Experience with first-line IT support and technical documentation
-- Network Security: Listed as a key skill, complemented by IT Security Administration training`,
-
-    "Summarize my most recent project experience and what tech I used.": 
-`Most Recent Role: Information Technology Enabler at Edunova (September 2025 – Present)
+- Network Security: Listed as a key skill, complemented by IT Security Administration training`
+      },
+      {
+        q: "Summarize my most recent project experience and what tech I used.",
+        a: `Most Recent Role: Information Technology Enabler at Edunova (September 2025 – Present)
 Duties: Provide first-line IT support, manage data entry and document formatting, train staff on digital tools to improve efficiency.
-Tech used: Microsoft 365 tools such as Excel, Word, and Outlook. Also practical experience using HTML and CSS to build a website.`,
-
-    "What certifications or education do I have according to the CV?": 
-`Education:
+Tech used: Microsoft 365 tools such as Excel, Word, and Outlook. Also practical experience using HTML and CSS to build a website.`
+      },
+      {
+        q: "What certifications or education do I have according to the CV?",
+        a: `Education:
 - Grade 12 from Tsakane Ext 8 Secondary School
 - End User Computer NQF Level 3 from Uthando Community Development Centre
 - University of Johannesburg: Courses in 4IR in Artificial Intelligence, Financial Literacy, and Advanced Information Literacy
 - Educourse Academy: IT Security Administration, Business Administration, and AI engineering basics
 - Mlab: Cloud Computing
 
-Certifications: GEN AI (Wethinkcode), Linguistic AI training, Digital Learning, and certifications in Microsoft 365 (Excel and PowerPoint).`,
-
-    "Based on my CV, what kind of web development internship roles am I qualified for?": 
-`Based on skills in HTML, CSS, AI, and IT administration, you are qualified for:
+Certifications: GEN AI (Wethinkcode), Linguistic AI training, Digital Learning, and certifications in Microsoft 365 (Excel and PowerPoint).`
+      },
+      {
+        q: "Based on my CV, what kind of web development internship roles am I qualified for?",
+        a: `Based on skills in HTML, CSS, AI, and IT administration, you are qualified for:
 - Front-End Development Intern: Due to experience creating a website with HTML and CSS
 - Web Content Intern: Leveraging combined skills in content creation and web technologies
-- Junior UI/UX or Web Support Intern: Utilizing first-line IT support experience alongside web development knowledge`,
-
-    "What is my contact info and LinkedIn/GitHub if listed?" : 
-`Contact Information:
+- Junior UI/UX or Web Support Intern: Utilizing first-line IT support experience alongside web development knowledge`
+      },
+      {
+        q: "What is my contact info and LinkedIn/GitHub if listed?",
+        a: `Contact Information:
 - Email: cindidineo793@gmail.com
 - Phone: 0656729615
 - Address: 503 Mdhlela Street, Tsakane, 1550
 - LinkedIn/GitHub: These profiles are not listed on the provided CV.`
-};
+      }
+    ];
 
-// Build the UI
-const container = document.getElementById('qa-container');
+    const qaContainer = document.getElementById('qa-container');
+    const searchInput = document.getElementById('search');
+    const expandAllBtn = document.getElementById('expandAll');
+    const collapseAllBtn = document.getElementById('collapseAll');
 
-Object.keys(cv_knowledge_base).forEach((question, index) => {
-    const btn = document.createElement('button');
-    btn.className = 'question-btn';
-    btn.innerText = `Q${index + 1}: ${question}`;
+    // Build the Q/A list
+    function buildList(items) {
+      qaContainer.innerHTML = '';
+      items.forEach((item, idx) => {
+        const qId = `q-${idx}`;
+        const aId = `a-${idx}`;
 
-    const ansDiv = document.createElement('div');
-    ansDiv.className = 'answer';
-    ansDiv.innerHTML = `<b>A:</b> ${cv_knowledge_base[question]} 
-    <div class=\"source\">Source: Dineo Cindi CV Document</div>`;
+        const btn = document.createElement('button');
+        btn.className = 'question-btn';
+        btn.type = 'button';
+        btn.id = qId;
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-controls', aId);
+        btn.innerHTML = `<span>${item.q}</span>`;
 
-    btn.onclick = () => {
-        ansDiv.classList.toggle('show');
-    };
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.type = 'button';
+        copyBtn.title = 'Copy answer';
+        copyBtn.innerText = 'Copy';
+        copyBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          navigator.clipboard?.writeText(item.a).then(()=> {
+            copyBtn.innerText = 'Copied';
+            setTimeout(()=> copyBtn.innerText = 'Copy', 1500);
+          }).catch(()=> {
+            copyBtn.innerText = 'Copy';
+          });
+        });
 
-    container.appendChild(btn);
-    container.appendChild(ansDiv);
-});
-</script>
+        // Put copy button inside btn (so it appears on right)
+        btn.appendChild(copyBtn);
+
+        const ans = document.createElement('div');
+        ans.className = 'answer';
+        ans.id = aId;
+        ans.role = 'region';
+        ans.setAttribute('aria-hidden', 'true');
+        ans.setAttribute('aria-labelledby', qId);
+        ans.tabIndex = 0;
+        ans.innerHTML = `<strong>A:</strong> ${escapeHtml(item.a)}<div class="meta">Source: Dineo Cindi CV Document</div>`;
+
+        // Toggle handler
+        const toggle = () => {
+          const expanded = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', String(!expanded));
+          ans.classList.toggle('show');
+          ans.setAttribute('aria-hidden', String(expanded));
+          if(!expanded) ans.focus();
+        };
+
+        btn.addEventListener('click', toggle);
+        btn.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggle();
+          }
+        });
+
+        qaContainer.appendChild(btn);
+        qaContainer.appendChild(ans);
+      });
+    }
+
+    // Simple client-side search (case-insensitive)
+    function filterList(query) {
+      const q = query.trim().toLowerCase();
+      if(!q) {
+        buildList(cvKnowledge);
+        return;
+      }
+      const filtered = cvKnowledge.filter(item => {
+        return item.q.toLowerCase().includes(q) || item.a.toLowerCase().includes(q);
+      });
+      buildList(filtered);
+    }
+
+    // Expand / Collapse all
+    function expandAll() {
+      document.querySelectorAll('.question-btn').forEach(btn => {
+        const aId = btn.getAttribute('aria-controls');
+        const ans = document.getElementById(aId);
+        btn.setAttribute('aria-expanded', 'true');
+        if(ans) { ans.classList.add('show'); ans.setAttribute('aria-hidden', 'false'); }
+      });
+    }
+    function collapseAll() {
+      document.querySelectorAll('.question-btn').forEach(btn => {
+        const aId = btn.getAttribute('aria-controls');
+        const ans = document.getElementById(aId);
+        btn.setAttribute('aria-expanded', 'false');
+        if(ans) { ans.classList.remove('show'); ans.setAttribute('aria-hidden', 'true'); }
+      });
+    }
+
+    // Escape HTML so we never inject unsanitized HTML
+    function escapeHtml(text) {
+      return text.replace(/[&<>\"']/g, function(m) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m]);
+      }).replace(/\n/g,'<br>');
+    }
+
+    // Event bindings
+    searchInput.addEventListener('input', (e) => filterList(e.target.value));
+    expandAllBtn.addEventListener('click', expandAll);
+    collapseAllBtn.addEventListener('click', collapseAll);
+
+    // Initial render
+    buildList(cvKnowledge);
+  </script>
 </body>
 </html>
