@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Resume Feedback Tool</title>
+  <style>
+    body { background:#0a0a0a; color:#e6f9ec; font-family:system-ui,Segoe UI,Roboto,Arial; padding:24px; }
+    .container { max-width:900px; margin:auto; }
+    h1 { color:#00ff41; text-align:center; margin-bottom:6px; }
+    .muted { color:#9aa39a; text-align:center; margin-bottom:18px; }
+    input, textarea { width:100%; padding:12px; margin:10px 0; background:#111; border:1px solid #00ff41; color:#e6f9ec; border-radius:8px; box-sizing:border-box;}
+    button { width:100%; padding:14px; background:#00ff41; color:#000; font-weight:700; border:none; border-radius:8px; cursor:pointer; font-size:16px; }
+    button:hover { background:#39ff14; }
+    .result { margin-top:20px; padding:18px; border:1px solid #00ff41; border-radius:8px; display:none; background:#070707; }
+    .score { font-size:48px; color:#00ff41; text-align:center; margin-bottom:6px; }
+    .section { margin:12px 0; }
+    .section h3 { color:#00ff41; margin:6px 0; }
+    ul { list-style:none; padding-left:0; margin:0; }
+    li { background:#111; padding:10px; margin:6px 0; border-left:4px solid #00ff41; border-radius:4px; }
+    .loader { text-align:center; display:none; margin-top:12px; color:#cbeac2; }
+    .error { color:#ff8080; font-weight:600; }
+    footer { text-align:center; color:#889b8a; margin-top:22px; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Resume Feedback Tool</h1>
+    <div class="muted">Paste your resume and target role. The AI returns an ATS score, strengths, improvements, and a rewritten bullet.</div>
+
+    <input id="job_title" placeholder="Target Job Title — e.g. Software Engineer" />
+    <textarea id="resume" rows="12" placeholder="Paste your full resume here (or a single role/bullet you want rewritten)"></textarea>
+    <button id="analyzeBtn">GET AI FEEDBACK</button>
+
+    <div class="loader" id="loader">AI is analyzing your resume…</div>
+
+    <div class="result" id="result">
+      <div class="score" id="ats_score"></div>
+      <p id="summary"></p>
+
+      <div class="section">
+        <h3>✅ Strengths</h3>
+        <ul id="strengths"></ul>
+      </div>
+
+      <div class="section">
+        <h3>⚡ Areas to Improve</h3>
+        <ul id="improvements"></ul>
+      </div>
+
+      <div class="section">
+        <h3>✨ Rewritten Bullet Example</h3>
+        <p id="rewritten"></p>
+      </div>
+    </div>
+
+    <div class="error" id="error" style="display:none"></div>
+
+    <footer>
+      Note: This demo uses the OpenAI API on the server. Do NOT put your key in client-side code.
+    </footer>
+  </div>
+
+  <script>
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const loader = document.getElementById('loader');
+    const resultEl = document.getElementById('result');
+    const errorEl = document.getElementById('error');
+
+    analyzeBtn.addEventListener('click', analyze);
+
+    async function analyze() {
+      errorEl.style.display = 'none';
+      const resume = document.getElementById('resume').value.trim();
+      const job_title = document.getElementById('job_title').value.trim();
+
+      if (!resume || !job_title) {
+        alert('Please fill both fields');
+        return;
+      }
+
+      loader.style.display = 'block';
+      resultEl.style.display = 'none';
+
+      try {
+        const resp = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ resume, job_title })
+        });
+
+        const data = await resp.json();
+        loader.style.display = 'none';
+
+        if (!resp.ok || !data.success) {
+          const msg = data?.error || data?.message || 'Unknown error';
+          errorEl.innerText = 'Error: ' + msg;
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        const d = data.data;
+
+        // Show results
+        document.getElementById('ats_score').innerText = (d.ats_score ?? '—') + '/100';
+        document.getElementById('summary').innerText = d.summary ?? '';
+
+        document.getElementById('strengths').innerHTML = (d.strengths || []).map(s => `<li>${escapeHtml(s)}</li>`).join('');
+        document.getElementById('improvements').innerHTML = (d.improvements || []).map(i => `<li><b>${escapeHtml(i.area)}:</b> ${escapeHtml(i.feedback)}</li>`).join('');
+        document.getElementById('rewritten').innerText = d.rewritten_bullet ?? '';
+
+        resultEl.style.display = 'block';
+      } catch (err) {
+        loader.style.display = 'none';
+        errorEl.innerText = 'Error contacting server: ' + err.message;
+        errorEl.style.display = 'block';
+      }
+    }
+
+    function escapeHtml(str = '') {
+      return str.replace(/[&<>"']/g, function (m) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m];
+      });
+    }
+  </script>
+</body>
+</html>
