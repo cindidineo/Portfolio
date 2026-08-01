@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Issues - Static HTML</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; padding: 24px; color:#111 }
+    table { border-collapse: collapse; width: 100%; margin-top: 16px }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left }
+    th { background: #f6f8fa }
+    .null { color: #888 }
+    .urgency-high { color: #b91c1c; font-weight: 600 }
+    .urgency-medium { color: #b45309; font-weight: 600 }
+    .urgency-low { color: #065f46; font-weight: 600 }
+    .container { max-width: 1000px; margin: 0 auto }
+    header { display:flex; justify-content:space-between; align-items:center }
+    @media (max-width: 700px) {
+      th, td { font-size: 14px; padding: 6px }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Issues (static)</h1>
+    </header>
+
+    <p>This static page contains the records from the provided JSON rendered into a table.</p>
+
+    <table id="issues-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Issue Type</th>
+          <th>Urgency</th>
+          <th>Summary</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Dineo Cindi</td>
+          <td>dineo793@gmail.com</td>
+          <td>laptop won't turn on</td>
+          <td class="urgency-high">high</td>
+          <td>Laptop won't turn on; needs urgent repair for work tomorrow.</td>
+        </tr>
+        <tr>
+          <td class="null">—</td>
+          <td>test@company.com</td>
+          <td>portal login issue</td>
+          <td class="urgency-low">low</td>
+          <td>Can't login to the portal.</td>
+        </tr>
+        <tr>
+          <td>Sarah</td>
+          <td>sarah@mail.com</td>
+          <td>website down</td>
+          <td class="urgency-high">high</td>
+          <td>Website is down and needs urgent attention.</td>
+        </tr>
+        <tr>
+          <td>John</td>
+          <td class="null">—</td>
+          <td>printer jamming</td>
+          <td class="null">—</td>
+          <td>Printer is jamming.</td>
+        </tr>
+        <tr>
+          <td class="null">—</td>
+          <td class="null">—</td>
+          <td class="null">—</td>
+          <td class="urgency-high">high</td>
+          <td>Unclear message: user requests immediate help.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
