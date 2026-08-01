@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NeuroFive AI Resume Feedback Tool</title>
+<style>
+    body { background:#0a0a0a; color:#e0e0e0; font-family: 'Segoe UI', sans-serif; padding:20px; }
+    .container { max-width:900px; margin:auto; }
+    h1 { color:#00ff41; text-align:center; }
+    textarea, input { width:100%; padding:12px; margin:10px 0; background:#111; border:1px solid #00ff41; color:#e0e0e0; border-radius:8px; }
+    button { width:100%; padding:14px; background:#00ff41; color:#000; font-weight:bold; border:none; border-radius:8px; cursor:pointer; font-size:16px; }
+    button:hover { background:#39ff14; }
+    .result { margin-top:20px; padding:20px; border:1px solid #00ff41; border-radius:8px; display:none; }
+    .score { font-size:48px; color:#00ff41; text-align:center; }
+    .section { margin:15px 0; }
+    .section h3 { color:#00ff41; }
+    ul { list-style:none; padding-left:0; }
+    li { background:#111; padding:8px; margin:5px 0; border-left:3px solid #00ff41; }
+    .loader { text-align:center; display:none; color:#00ff41; margin-top:10px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>AI RESUME FEEDBACK TOOL</h1>
+  <p>Paste your resume and target job. Get instant AI feedback with ATS score.</p>
+  
+  <input id="job_title" placeholder="Target Job Title: e.g. Software Engineer" />
+  <textarea id="resume" rows="12" placeholder="Paste your full resume here..."></textarea>
+  <button onclick="analyze()">GET AI FEEDBACK</button>
+  
+  <div class="loader" id="loader">AI is analyzing your resume...</div>
+  
+  <div class="result" id="result">
+    <div class="score" id="ats_score">85/100</div>
+    <p id="summary"></p>
+    
+    <div class="section">
+      <h3>✅ Strengths</h3>
+      <ul id="strengths"></ul>
+    </div>
+    
+    <div class="section">
+      <h3>⚡ Areas to Improve</h3>
+      <ul id="improvements"></ul>
+    </div>
+    
+    <div class="section">
+      <h3>✨ Rewritten Bullet Example</h3>
+      <p id="rewritten"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+async function analyze() {
+    const resume = document.getElementById('resume').value;
+    const job_title = document.getElementById('job_title').value;
+    
+    if(!resume || !job_title) { alert("Please fill both fields"); return; }
+    
+    document.getElementById('loader').style.display = 'block';
+    document.getElementById('result').style.display = 'none';
+    
+    try {
+        const res = await fetch('/analyze', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({resume, job_title})
+        });
+        
+        const data = await res.json();
+        document.getElementById('loader').style.display = 'none';
+        
+        if(data.success) {
+            const d = data.data;
+            document.getElementById('ats_score').innerText = (d.ats_score ?? "N/A") + "/100";
+            document.getElementById('summary').innerText = d.summary || '';
+            
+            document.getElementById('strengths').innerHTML = (d.strengths || []).map(s => `<li>${s}</li>`).join('');
+            document.getElementById('improvements').innerHTML = (d.improvements || []).map(i => `<li><b>${i.area}:</b> ${i.feedback}</li>`).join('');
+            document.getElementById('rewritten').innerText = d.rewritten_bullet || '';
+            
+            document.getElementById('result').style.display = 'block';
+        } else {
+            alert("Error: " + (data.error || "Unknown error"));
+            console.error(data);
+        }
+    } catch (err) {
+        document.getElementById('loader').style.display = 'none';
+        alert("Network or server error. See console for details.");
+        console.error(err);
+    }
+}
+</script>
+</body>
+</html>
