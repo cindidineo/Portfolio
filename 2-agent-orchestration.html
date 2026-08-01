@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NeuroFive: 2-Agent AI Orchestration (Server-backed)</title>
+<style>
+  :root{--bg:#000;--card:#0a0a0a;--border:#00ff41;--text:#e0ffe0;--green:#00ff41;--green-dim:#00cc33}
+  *{box-sizing:border-box;margin:0;padding:0;font-family:Consolas,Courier,monospace}
+  body{background:var(--bg);color:var(--text);padding:20px}
+  .container{max-width:1100px;margin:auto}
+  .pipeline{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+  .agent-card{background:var(--card);border:1px solid var(--border);padding:20px;border-radius:8px;min-height:360px}
+  textarea{width:100%;height:240px;background:#050505;color:var(--text);border:1px solid var(--border);border-radius:4px;padding:10px}
+  .controls{text-align:center;margin:20px 0}
+  button{background:var(--green);color:#000;border:none;padding:12px 20px;border-radius:6px;cursor:pointer;font-weight:bold}
+  .log{font-size:12px;color:var(--green-dim);margin-top:8px}
+  .comparison{background:var(--card);border:1px solid var(--border);padding:20px;border-radius:8px;margin-top:20px}
+  .diff{background:#001100;padding:10px;border-left:3px solid var(--green);margin-top:10px;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>&gt; 2-AGENT ORCHESTRATION SYSTEM</h1>
+  <p class="subtitle">Agent 1: Writer drafts | Agent 2: Editor refines | Server-backed API</p>
+
+  <div class="settings" style="margin:16px 0">
+    <label>Topic to Test:</label>
+    <input type="text" id="topic" value="Benefits of using AI agents in small businesses in South Africa" style="width:100%;padding:8px;margin-top:6px;background:#111;border:1px solid var(--border);color:var(--text)"/>
+  </div>
+
+  <div class="pipeline">
+    <div class="agent-card">
+      <div class="agent-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:10px;height:10px;border-radius:50%;background:#00ff41"></div>
+          <div>
+            <div style="color:var(--green);font-weight:bold">AGENT 1: WRITER</div>
+            <div style="font-size:12px;color:var(--green-dim)">Draft content, creative and fast</div>
+          </div>
+        </div>
+      </div>
+      <textarea id="writerOutput" readonly placeholder="Writer output will appear here..."></textarea>
+      <div class="log" id="writerLog"></div>
+    </div>
+
+    <div class="agent-card">
+      <div class="agent-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:10px;height:10px;border-radius:50%;background:#39ff14"></div>
+          <div>
+            <div style="color:var(--green);font-weight:bold">AGENT 2: EDITOR/CRITIC</div>
+            <div style="font-size:12px;color:var(--green-dim)">Review, fact-check, improve clarity</div>
+          </div>
+        </div>
+      </div>
+      <textarea id="editorOutput" readonly placeholder="Editor output will appear here..."></textarea>
+      <div class="log" id="editorLog"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="runBtn" onclick="runPipeline()">RUN 2-AGENT PIPELINE</button>
+  </div>
+
+  <div class="comparison">
+    <h3 style="color:var(--green);">What Did The Editor Improve?</h3>
+    <div class="diff" id="improvements">Run the pipeline to see improvements...</div>
+  </div>
+</div>
+
+<script>
+async function callAgent(agent, payload) {
+  const res = await fetch('/api/ai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ agent, ...payload })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(()=>null);
+    throw new Error(err?.error || res.statusText);
+  }
+  const d = await res.json();
+  return d.text;
+}
+
+function getImprovements(draft, final) {
+  const improvements = [];
+  if (!draft || !final) return 'No comparison available.';
+  if (final.length > draft.length) improvements.push('Added more detail and structure');
+  // detect headings (simple)
+  if (/# |^### |^## /m.test(final) || final.includes('\n\n')) improvements.push('Added headings and better structure');
+  const draftSentences = draft.split(/[.?!]\s+/).length;
+  const finalSentences = final.split(/[.?!]\s+/).length;
+  if (finalSentences > draftSentences) improvements.push('Improved clarity and flow');
+  if (final.length < draft.length) improvements.push('Removed fluff and tightened language');
+  if (!improvements.length) improvements.push('Edited for grammar and tone');
+  return improvements.map(i => '• ' + i).join('\n');
+}
+
+async function runPipeline() {
+  const btn = document.getElementById('runBtn');
+  const topic = document.getElementById('topic').value;
+  btn.disabled = true;
+  btn.textContent = 'RUNNING...';
+  document.getElementById('writerLog').textContent = '';
+  document.getElementById('editorLog').textContent = '';
+  try {
+    document.getElementById('writerLog').textContent = 'Calling writer...';
+    document.getElementById('writerOutput').value = 'Generating draft...';
+    const draft = await callAgent('writer', { topic, temperature: 0.7 });
+    document.getElementById('writerOutput').value = draft;
+    document.getElementById('writerLog').textContent = 'Draft complete. Sending to editor...';
+
+    // small pause for UX
+    await new Promise(r => setTimeout(r, 600));
+
+    document.getElementById('editorLog').textContent = 'Calling editor...';
+    document.getElementById('editorOutput').value = 'Refining draft...';
+    const final = await callAgent('editor', { draft, temperature: 0.3 });
+    document.getElementById('editorOutput').value = final;
+    document.getElementById('editorLog').textContent = 'Refinement complete.';
+
+    document.getElementById('improvements').textContent = getImprovements(draft, final);
+  } catch (err) {
+    alert('Error: ' + err.message);
+    document.getElementById('writerLog').textContent = 'Error';
+    document.getElementById('editorLog').textContent = 'Error';
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'RUN 2-AGENT PIPELINE';
+  }
+}
+</script>
+</body>
+</html>
