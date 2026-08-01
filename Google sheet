@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Support Ticket</title>
+<style>
+    body { background: #000; color: #00ff41; font-family: Consolas; padding: 40px; }
+   .form { max-width: 500px; margin: auto; border: 1px solid #00ff41; padding: 30px; border-radius: 10px; }
+    input, textarea { width: 100%; padding: 10px; margin: 10px 0; background: #111; color: #00ff41; border: 1px solid #00ff41; }
+    button { background: #00ff41; color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; }
+    #status { margin-top: 15px; }
+</style>
+</head>
+<body>
+<div class="form">
+  <h2>AI Support Ticket</h2>
+  <input id="name" placeholder="Your Name">
+  <input id="email" placeholder="Your Email">
+  <textarea id="message" placeholder="Describe your issue"></textarea>
+  <button onclick="submitTicket()">Submit Ticket</button>
+  <div id="status"></div>
+</div>
+
+<script>
+const OPENAI_KEY = "sk-...PUT_YOUR_KEY_HERE"; // ⚠️ For demo only. In production use a backend
+const SHEET_WEBHOOK = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // See step below
+
+async function submitTicket() {
+  const name = document.getElementById('name').value;
+  const email = document.getElementById('email').value;
+  const message = document.getElementById('message').value;
+  document.getElementById('status').innerText = "AI is processing...";
+
+  // STEP 1: CALL OPENAI
+  const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${OPENAI_KEY}` },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "Return ONLY JSON: {summary, category[Billing,Technical,Account,General], urgency, draft_reply}. Be professional SA English." },
+        { role: "user", content: `Name:${name} Email:${email} Issue:${message}` }
+      ]
+    })
+  });
+  const aiData = await aiRes.json();
+  const aiOutput = JSON.parse(aiData.choices[0].message.content);
+
+  // STEP 2: SEND EMAIL
+  await fetch("https://api.emailjs.com/api/v1.0/email/send", { // Using EmailJS - free
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      service_id: "YOUR_EMAILJS_SERVICE",
+      template_id: "YOUR_TEMPLATE_ID",
+      user_id: "YOUR_EMAILJS_PUBLIC_KEY",
+      template_params: { to_email: email, name: name, reply: aiOutput.draft_reply, category: aiOutput.category }
+    })
+  });
+
+  // STEP 3: SAVE TO GOOGLE SHEET
+  await fetch(SHEET_WEBHOOK, {
+    method: "POST",
+    body: JSON.stringify({ name, email, message,...aiOutput })
+  });
+
+  document.getElementById('status').innerText = "✅ Ticket submitted! Check your email for AI reply.";
+}
+</script>
+</body>
+</html>
+function doPost(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sheet1");
+  const data = JSON.parse(e.postData.contents);
+  sheet.appendRow([new Date(), data.name, data.email, data.message, data.summary, data.category, data.urgency]);
+  return ContentService.createTextOutput("OK");
+}
+export default defineComponent({
+  async run({ steps, $ }) {
+    const { name, email, message } = steps.trigger.event.body;
+    const ai = await $.http.post("https://api.openai.com/v1/chat/completions", {
+      headers: { "Authorization": `Bearer ${process.env.OPENAI_KEY}` },
+      data: {
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "Return JSON: summary, category, draft_reply" },
+          { role: "user", content: `Name:${name} Email:${email} Issue:${message}` }
+        ]
+      }
+    });
+    return JSON.parse(ai.data.choices[0].message.content);
+  }
+})
