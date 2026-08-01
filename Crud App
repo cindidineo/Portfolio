@@ -1,0 +1,148 @@
+create table tasks (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users not null,
+  title text not null,
+  description text,
+  status text default 'pending',
+  created_at timestamp with time zone default now()
+);
+
+alter table tasks enable row level security;
+
+create policy "Users can only see their own tasks" 
+on tasks for all using (auth.uid() = user_id);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexora Task Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root { --bg:#0A0A0A; --card:#111; --accent:#FF3131; --text:#fff; }
+  body { background:var(--bg); color:var(--text); font-family:Arial; padding:20px; max-width:700px; margin:auto; }
+  h1 { color:var(--accent); }
+  input, textarea, button { width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #333; background:#222; color:#fff; }
+  button { background:var(--accent); border:none; font-weight:bold; cursor:pointer; }
+  button:hover { opacity:0.8; }
+  .task { background:var(--card); padding:15px; margin:10px 0; border-radius:10px; border-left:4px solid var(--accent); }
+  .task button { width:auto; margin-right:8px; padding:8px 12px; font-size:12px; }
+  .hidden { display:none; }
+  .auth-box { max-width:400px; margin:50px auto; text-align:center; }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth" class="auth-box">
+  <h1>NEXORA TASK TRACKER</h1>
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="signUp()">Sign Up</button>
+  <button onclick="signIn()">Login</button>
+  <p id="auth-msg"></p>
+</div>
+
+<!-- APP SCREEN -->
+<div id="app" class="hidden">
+  <div style="display:flex; justify-content:space-between;">
+    <h1>My Tasks</h1>
+    <button onclick="logout()" style="width:100px;">Logout</button>
+  </div>
+  
+  <div class="card">
+    <h3>Add New Task</h3>
+    <input id="title" placeholder="Task Title">
+    <textarea id="desc" placeholder="Description"></textarea>
+    <button onclick="addTask()">Create Task</button>
+  </div>
+  
+  <div id="tasks"></div>
+</div>
+
+<script>
+// 1. REPLACE THESE WITH YOUR SUPABASE KEYS
+const SUPABASE_URL = 'https://YOUR_URL.supabase.co'
+const SUPABASE_KEY = 'YOUR_ANON_PUBLIC_KEY'
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+
+let currentUser = null;
+
+// 2. AUTH FUNCTIONS
+async function signUp() {
+  const { data, error } = await supabase.auth.signUp({
+    email: email.value,
+    password: password.value
+  })
+  auth-msg.innerText = error ? error.message : "Check email to confirm!"
+}
+
+async function signIn() {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.value,
+    password: password.value
+  })
+  if(error) auth-msg.innerText = error.message
+  else loadApp(data.user)
+}
+
+async function logout() {
+  await supabase.auth.signOut()
+  app.classList.add('hidden')
+  auth.classList.remove('hidden')
+}
+
+// 3. CRUD FUNCTIONS
+async function loadApp(user) {
+  currentUser = user;
+  auth.classList.add('hidden')
+  app.classList.remove('hidden')
+  fetchTasks()
+}
+
+async function addTask() {
+  await supabase.from('tasks').insert({
+    title: title.value,
+    description: desc.value,
+    user_id: currentUser.id
+  })
+  title.value = ''; desc.value = '';
+  fetchTasks()
+}
+
+async function fetchTasks() {
+  const { data } = await supabase.from('tasks')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false })
+  
+  tasks.innerHTML = data.map(t => `
+    <div class="task">
+      <h4>${t.title}</h4>
+      <p>${t.description || ''}</p>
+      <button onclick="editTask('${t.id}')">Edit</button>
+      <button onclick="deleteTask('${t.id}')" style="background:#555;">Delete</button>
+    </div>
+  `).join('')
+}
+
+async function editTask(id) {
+  const newTitle = prompt("New title:")
+  if(newTitle) {
+    await supabase.from('tasks').update({title: newTitle}).eq('id', id)
+    fetchTasks()
+  }
+}
+
+async function deleteTask(id) {
+  if(confirm("Delete this task?")) {
+    await supabase.from('tasks').delete().eq('id', id)
+    fetchTasks()
+  }
+}
+
+// Check if already logged in
+supabase.auth.getUser().then(({data}) => { if(data.user) loadApp(data.user) })
+</script>
+</body>
+</html>
