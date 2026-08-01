@@ -1,0 +1,176 @@
+from flask import Flask, render_template, request, jsonify
+import openai
+import os
+import json
+
+app = Flask(__name__)
+
+# PUT YOUR OPENAI KEY HERE
+openai.api_key = "sk-REPLACE_WITH_YOUR_KEY"
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/analyze', methods=['POST'])
+def analyze_resume():
+    data = request.json
+    resume_text = data.get('resume')
+    job_title = data.get('job_title')
+
+    # ADVANCED: STRUCTURED JSON OUTPUT PROMPT
+    prompt = f"""
+You are an expert career coach and ATS resume scanner.
+Analyze this resume for the target job: {job_title}
+
+Resume:
+{resume_text}
+
+Return ONLY valid JSON with this exact structure:
+{{
+  "ats_score": 0-100,
+  "summary": "2 sentence overall feedback",
+  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "improvements": [
+    {{"area": "Keywords", "feedback": "Add more keywords like Python, SQL"}},
+    {{"area": "Formatting", "feedback": "Use bullet points not paragraphs"}}
+  ],
+  "rewritten_bullet": "Rewrite 1 weak bullet point to be more impact-driven"
+}}
+"""
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3
+        )
+        
+        ai_output = response.choices[0].message.content
+        # Clean JSON
+        clean_json = ai_output.replace("```json", "").replace("```", "").strip()
+        result = json.loads(clean_json)
+        
+        return jsonify({"success": True, "data": result})
+    
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroFive AI Resume Feedback Tool</title>
+<style>
+    body { background:#0a0a0a; color:#e0e0e0; font-family: 'Segoe UI', sans-serif; padding:20px; }
+   .container { max-width:900px; margin:auto; }
+    h1 { color:#00ff41; text-align:center; }
+    textarea, input { width:100%; padding:12px; margin:10px 0; background:#111; border:1px solid #00ff41; color:#e0e0e0; border-radius:8px; }
+    button { width:100%; padding:14px; background:#00ff41; color:#000; font-weight:bold; border:none; border-radius:8px; cursor:pointer; font-size:16px; }
+    button:hover { background:#39ff14; }
+   .result { margin-top:20px; padding:20px; border:1px solid #00ff41; border-radius:8px; display:none; }
+   .score { font-size:48px; color:#00ff41; text-align:center; }
+   .section { margin:15px 0; }
+   .section h3 { color:#00ff41; }
+    ul { list-style:none; padding-left:0; }
+    li { background:#111; padding:8px; margin:5px 0; border-left:3px solid #00ff41; }
+   .loader { text-align:center; display:none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>> AI RESUME FEEDBACK TOOL</h1>
+  <p>Paste your resume and target job. Get instant AI feedback with ATS score.</p>
+  
+  <input id="job_title" placeholder="Target Job Title: e.g. Software Engineer">
+  <textarea id="resume" rows="12" placeholder="Paste your full resume here..."></textarea>
+  <button onclick="analyze()">GET AI FEEDBACK</button>
+  
+  <div class="loader" id="loader">AI is analyzing your resume...</div>
+  
+  <div class="result" id="result">
+    <div class="score" id="ats_score">85/100</div>
+    <p id="summary"></p>
+    
+    <div class="section">
+      <h3>✅ Strengths</h3>
+      <ul id="strengths"></ul>
+    </div>
+    
+    <div class="section">
+      <h3>⚡ Areas to Improve</h3>
+      <ul id="improvements"></ul>
+    </div>
+    
+    <div class="section">
+      <h3>✨ Rewritten Bullet Example</h3>
+      <p id="rewritten"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+async function analyze() {
+    const resume = document.getElementById('resume').value;
+    const job_title = document.getElementById('job_title').value;
+    
+    if(!resume ||!job_title) { alert("Please fill both fields"); return; }
+    
+    document.getElementById('loader').style.display = 'block';
+    document.getElementById('result').style.display = 'none';
+    
+    const res = await fetch('/analyze', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({resume, job_title})
+    });
+    
+    const data = await res.json();
+    document.getElementById('loader').style.display = 'none';
+    
+    if(data.success) {
+        const d = data.data;
+        document.getElementById('ats_score').innerText = d.ats_score + "/100";
+        document.getElementById('summary').innerText = d.summary;
+        
+        document.getElementById('strengths').innerHTML = d.strengths.map(s => `<li>${s}</li>`).join('');
+        document.getElementById('improvements').innerHTML = d.improvements.map(i => `<li><b>${i.area}:</b> ${i.feedback}</li>`).join('');
+        document.getElementById('rewritten').innerText = d.rewritten_bullet;
+        
+        document.getElementById('result').style.display = 'block';
+    } else {
+        alert("Error: " + data.error);
+    }
+}
+</script>
+</body>
+</html>
+# AI Resume Feedback Tool - NeuroFive Capstone
+
+## Problem
+Job seekers don't know if their resume will pass ATS systems or impress recruiters.
+
+## Solution
+An AI-powered web app that gives instant, structured feedback on resumes.
+User inputs: Resume text + Target Job Title
+AI Output: ATS Score, Summary, Strengths, Improvements, Rewritten Bullet
+
+## Tech Stack
+- Frontend: HTML5, CSS3, JavaScript
+- Backend: Python, Flask
+- AI: OpenAI GPT-4o-mini API
+- Advanced: Structured JSON Output for reliable parsing
+
+## How to Run
+1. `pip install flask openai`
+2. Add your OpenAI key in `app.py`
+3. `python app.py`
+4. Open http://127.0.0.1:5000
+
+## What I'd Improve
+- Add PDF upload with PyPDF2 for RAG
+- Add automation to email feedback
+- Fine-tune for specific industries
