@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Dineo Cindi",
+    "email": "dineo793@gmail.com",
+    "issue_type": "laptop won't turn on",
+    "urgency": "high",
+    "summary": "Laptop won't turn on; needs urgent repair for work tomorrow."
+  },
+  {
+    "name": null,
+    "email": "test@company.com",
+    "issue_type": "portal login issue",
+    "urgency": "low",
+    "summary": "Can't login to the portal."
+  },
+  {
+    "name": "Sarah",
+    "email": "sarah@mail.com",
+    "issue_type": "website down",
+    "urgency": "high",
+    "summary": "Website is down and needs urgent attention."
+  },
+  {
+    "name": "John",
+    "email": null,
+    "issue_type": "printer jamming",
+    "urgency": null,
+    "summary": "Printer is jamming."
+  },
+  {
+    "name": null,
+    "email": null,
+    "issue_type": null,
+    "urgency": "high",
+    "summary": "Unclear message: user requests immediate help."
+  }
+]
