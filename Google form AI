@@ -1,0 +1,82 @@
+// 1. PUT YOUR OPENAI API KEY HERE
+const OPENAI_API_KEY = "sk-REPLACE_WITH_YOUR_KEY";
+
+function onFormSubmit(e) {
+  try {
+    const sheet = e.range.getSheet();
+    const row = e.range.getRow();
+    
+    // 2. GET DATA FROM GOOGLE FORM
+    const timestamp = e.values[0];
+    const name = e.values[1];
+    const email = e.values[2];
+    const subject = e.values[3];
+    const message = e.values[4];
+    
+    // 3. CALL OPENAI
+    const ai = getAIResponse(name, subject, message);
+    
+    // 4. WRITE AI OUTPUT TO COLUMNS F, G, H
+    sheet.getRange(row, 6).setValue(ai.category);
+    sheet.getRange(row, 7).setValue(ai.summary);
+    sheet.getRange(row, 8).setValue(ai.draft_reply);
+    sheet.getRange(row, 9).setValue("AI Processed");
+    
+    // 5. SEND EMAIL TO CUSTOMER
+    sendEmail(email, name, subject, ai.draft_reply);
+    
+  } catch(error) {
+    SpreadsheetApp.getActiveSheet().getRange(e.range.getRow(), 9).setValue("Error: " + error.message);
+  }
+}
+
+function getAIResponse(name, subject, message) {
+  const prompt = `You are a customer support AI for a company. 
+Analyze the ticket and return ONLY valid JSON with keys: category, summary, draft_reply.
+Categories must be one of: Technical, Billing, Sales, Account, General.
+Tone: Professional, helpful, South African English. Keep draft_reply under 4 sentences.
+
+Ticket:
+Name: ${name}
+Subject: ${subject}
+Message: ${message}`;
+  
+  const response = UrlFetchApp.fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + OPENAI_API_KEY,
+      "Content-Type": "application/json"
+    },
+    payload: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [{role: "user", content: prompt}],
+      temperature: 0.3
+    })
+  });
+  
+  const data = JSON.parse(response.getContentText());
+  const aiText = data.choices[0].message.content;
+  
+  // Clean JSON in case AI adds ```json
+  const cleanJson = aiText.replace(/```json/g, "").replace(/```/g, "").trim();
+  return JSON.parse(cleanJson);
+}
+
+function sendEmail(to, name, subject, reply) {
+  const emailSubject = `Re: ${subject}`;
+  const emailBody = `Hello ${name},\n\n${reply}\n\nBest regards,\nSupport Team`;
+  
+  MailApp.sendEmail({
+    to: to,
+    subject: emailSubject,
+    body: emailBody
+  });
+}
+
+// 6. RUN THIS ONCE TO ACTIVATE THE AUTOMATION
+function setupTrigger() {
+  ScriptApp.newTrigger('onFormSubmit')
+  .forSpreadsheet(SpreadsheetApp.getActive())
+  .onFormSubmit()
+  .create();
+}
