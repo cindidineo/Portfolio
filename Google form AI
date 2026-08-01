@@ -1,82 +1,324 @@
-// 1. PUT YOUR OPENAI API KEY HERE
-const OPENAI_API_KEY = "sk-REPLACE_WITH_YOUR_KEY";
+// ============================================================
+// GOOGLE FORM AI AUTOMATION FOR CUSTOMER SUPPORT
+// Enhanced Version with Error Handling & Advanced Features
+// ============================================================
 
+// 1. CONFIGURATION - UPDATE THESE VALUES
+const CONFIG = {
+  OPENAI_API_KEY: "sk-REPLACE_WITH_YOUR_KEY",
+  MODEL: "gpt-4o-mini",
+  TEMPERATURE: 0.3,
+  MAX_RETRIES: 2,
+  RATE_LIMIT_DELAY: 500, // milliseconds between API calls
+  RESPONSE_TIMEOUT: 30000, // 30 seconds
+  ADMIN_EMAIL: "admin@example.com" // For error notifications
+};
+
+// Categories for ticket classification
+const SUPPORT_CATEGORIES = ["Technical", "Billing", "Sales", "Account", "General"];
+
+// ============================================================
+// MAIN TRIGGER: Runs when Google Form submits
+// ============================================================
 function onFormSubmit(e) {
   try {
     const sheet = e.range.getSheet();
     const row = e.range.getRow();
     
-    // 2. GET DATA FROM GOOGLE FORM
-    const timestamp = e.values[0];
-    const name = e.values[1];
-    const email = e.values[2];
-    const subject = e.values[3];
-    const message = e.values[4];
+    // Extract form data
+    const formData = extractFormData(e.values);
     
-    // 3. CALL OPENAI
-    const ai = getAIResponse(name, subject, message);
+    // Validate required fields
+    if (!validateFormData(formData)) {
+      updateRow(sheet, row, { status: "Error: Missing required fields" });
+      return;
+    }
     
-    // 4. WRITE AI OUTPUT TO COLUMNS F, G, H
-    sheet.getRange(row, 6).setValue(ai.category);
-    sheet.getRange(row, 7).setValue(ai.summary);
-    sheet.getRange(row, 8).setValue(ai.draft_reply);
-    sheet.getRange(row, 9).setValue("AI Processed");
+    // Get AI analysis
+    const aiResponse = getAIResponse(formData);
     
-    // 5. SEND EMAIL TO CUSTOMER
-    sendEmail(email, name, subject, ai.draft_reply);
+    // Write results to spreadsheet
+    updateRow(sheet, row, {
+      category: aiResponse.category,
+      summary: aiResponse.summary,
+      draft_reply: aiResponse.draft_reply,
+      status: "AI Processed"
+    });
+    
+    // Send email to customer
+    sendCustomerEmail(formData.email, formData.name, formData.subject, aiResponse.draft_reply);
+    
+    // Log to analytics (optional)
+    logAnalytics(formData, aiResponse);
     
   } catch(error) {
-    SpreadsheetApp.getActiveSheet().getRange(e.range.getRow(), 9).setValue("Error: " + error.message);
+    handleError(e, error);
   }
 }
 
-function getAIResponse(name, subject, message) {
-  const prompt = `You are a customer support AI for a company. 
-Analyze the ticket and return ONLY valid JSON with keys: category, summary, draft_reply.
-Categories must be one of: Technical, Billing, Sales, Account, General.
-Tone: Professional, helpful, South African English. Keep draft_reply under 4 sentences.
-
-Ticket:
-Name: ${name}
-Subject: ${subject}
-Message: ${message}`;
-  
-  const response = UrlFetchApp.fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer " + OPENAI_API_KEY,
-      "Content-Type": "application/json"
-    },
-    payload: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [{role: "user", content: prompt}],
-      temperature: 0.3
-    })
-  });
-  
-  const data = JSON.parse(response.getContentText());
-  const aiText = data.choices[0].message.content;
-  
-  // Clean JSON in case AI adds ```json
-  const cleanJson = aiText.replace(/```json/g, "").replace(/```/g, "").trim();
-  return JSON.parse(cleanJson);
+// ============================================================
+// FORM DATA EXTRACTION
+// ============================================================
+function extractFormData(values) {
+  return {
+    timestamp: values[0] || new Date(),
+    name: String(values[1] || "").trim(),
+    email: String(values[2] || "").trim(),
+    subject: String(values[3] || "").trim(),
+    message: String(values[4] || "").trim()
+  };
 }
 
-function sendEmail(to, name, subject, reply) {
-  const emailSubject = `Re: ${subject}`;
-  const emailBody = `Hello ${name},\n\n${reply}\n\nBest regards,\nSupport Team`;
+// ============================================================
+// FORM VALIDATION
+// ============================================================
+function validateFormData(formData) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   
-  MailApp.sendEmail({
-    to: to,
-    subject: emailSubject,
-    body: emailBody
-  });
+  if (!formData.name || formData.name.length < 2) return false;
+  if (!emailRegex.test(formData.email)) return false;
+  if (!formData.subject || formData.subject.length < 3) return false;
+  if (!formData.message || formData.message.length < 10) return false;
+  
+  return true;
 }
 
-// 6. RUN THIS ONCE TO ACTIVATE THE AUTOMATION
+// ============================================================
+// AI RESPONSE GENERATION
+// ============================================================
+function getAIResponse(formData, retryCount = 0) {
+  const prompt = buildPrompt(formData);
+  
+  try {
+    const response = UrlFetchApp.fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + CONFIG.OPENAI_API_KEY,
+        "Content-Type": "application/json"
+      },
+      payload: JSON.stringify({
+        model: CONFIG.MODEL,
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional customer support AI. Always respond with valid JSON only."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: CONFIG.TEMPERATURE,
+        max_tokens: 500
+      }),
+      muteHttpExceptions: true,
+      timeout: CONFIG.RESPONSE_TIMEOUT
+    });
+    
+    // Handle API errors
+    if (response.getResponseCode() !== 200) {
+      if (retryCount < CONFIG.MAX_RETRIES) {
+        Utilities.sleep(CONFIG.RATE_LIMIT_DELAY * (retryCount + 1));
+        return getAIResponse(formData, retryCount + 1);
+      }
+      throw new Error(`OpenAI API Error: ${response.getResponseCode()} - ${response.getContentText()}`);
+    }
+    
+    // Parse response
+    const data = JSON.parse(response.getContentText());
+    const aiText = data.choices[0].message.content;
+    
+    // Clean and parse JSON
+    const cleanJson = aiText
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+    
+    const parsed = JSON.parse(cleanJson);
+    
+    // Validate AI response
+    return validateAIResponse(parsed);
+    
+  } catch(error) {
+    Logger.log("AI Response Error: " + error.message);
+    // Return fallback response
+    return getFallbackResponse(formData);
+  }
+}
+
+// ============================================================
+// BUILD AI PROMPT
+// ============================================================
+function buildPrompt(formData) {
+  return `Analyze this customer support ticket and respond with ONLY valid JSON (no markdown).
+
+JSON STRUCTURE:
+{
+  "category": "one of [Technical, Billing, Sales, Account, General]",
+  "summary": "2-3 sentence summary of the issue",
+  "draft_reply": "Professional, helpful response in South African English. Max 4 sentences."
+}
+
+TICKET:
+Name: ${formData.name}
+Email: ${formData.email}
+Subject: ${formData.subject}
+Message: ${formData.message}
+
+Respond with ONLY the JSON object, no additional text.`;
+}
+
+// ============================================================
+// VALIDATE AI RESPONSE
+// ============================================================
+function validateAIResponse(response) {
+  const defaults = {
+    category: "General",
+    summary: "Customer inquiry received",
+    draft_reply: "Thank you for contacting us. We appreciate your message and will respond shortly."
+  };
+  
+  // Validate category
+  if (!SUPPORT_CATEGORIES.includes(response.category)) {
+    response.category = defaults.category;
+  }
+  
+  // Ensure summary exists
+  if (!response.summary || response.summary.length < 5) {
+    response.summary = defaults.summary;
+  }
+  
+  // Ensure draft_reply exists
+  if (!response.draft_reply || response.draft_reply.length < 10) {
+    response.draft_reply = defaults.draft_reply;
+  }
+  
+  return response;
+}
+
+// ============================================================
+// FALLBACK RESPONSE (if AI fails)
+// ============================================================
+function getFallbackResponse(formData) {
+  return {
+    category: "General",
+    summary: `Customer inquiry from ${formData.name} regarding: ${formData.subject}`,
+    draft_reply: `Hello ${formData.name},\n\nThank you for reaching out to us. We have received your message and a team member will review it shortly. We appreciate your patience.\n\nBest regards,\nSupport Team`
+  };
+}
+
+// ============================================================
+// SEND EMAIL TO CUSTOMER
+// ============================================================
+function sendCustomerEmail(to, name, subject, reply) {
+  try {
+    const emailSubject = `Re: ${subject}`;
+    const emailBody = `Hello ${name},\n\n${reply}\n\nBest regards,\nSupport Team`;
+    
+    MailApp.sendEmail({
+      to: to,
+      subject: emailSubject,
+      body: emailBody,
+      replyTo: CONFIG.ADMIN_EMAIL
+    });
+    
+  } catch(error) {
+    Logger.log("Email Error: " + error.message);
+  }
+}
+
+// ============================================================
+// UPDATE SPREADSHEET ROW
+// ============================================================
+function updateRow(sheet, row, data) {
+  if (data.category) sheet.getRange(row, 6).setValue(data.category);
+  if (data.summary) sheet.getRange(row, 7).setValue(data.summary);
+  if (data.draft_reply) sheet.getRange(row, 8).setValue(data.draft_reply);
+  if (data.status) sheet.getRange(row, 9).setValue(data.status);
+}
+
+// ============================================================
+// ERROR HANDLING
+// ============================================================
+function handleError(e, error) {
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const row = e.range.getRow();
+  const errorMessage = "Error: " + error.message;
+  
+  sheet.getRange(row, 9).setValue(errorMessage);
+  Logger.log("Form Submit Error on row " + row + ": " + error.message);
+  
+  // Send admin notification for critical errors
+  if (error.message.includes("API") || error.message.includes("Authentication")) {
+    MailApp.sendEmail({
+      to: CONFIG.ADMIN_EMAIL,
+      subject: "Google Form AI: Error on row " + row,
+      body: "Error: " + error.message + "\n\nPlease check your OpenAI API key and rate limits."
+    });
+  }
+}
+
+// ============================================================
+// ANALYTICS & LOGGING
+// ============================================================
+function logAnalytics(formData, aiResponse) {
+  const sheet = SpreadsheetApp.getActiveSheet().getParent().getSheetByName("Analytics");
+  if (sheet) {
+    sheet.appendRow([
+      new Date(),
+      formData.name,
+      aiResponse.category,
+      aiResponse.summary.substring(0, 50),
+      "Processed"
+    ]);
+  }
+}
+
+// ============================================================
+// SETUP: Run this ONCE to activate automation
+// ============================================================
 function setupTrigger() {
+  // Remove existing triggers to avoid duplicates
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === "onFormSubmit") {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+  
+  // Create new trigger
   ScriptApp.newTrigger('onFormSubmit')
-  .forSpreadsheet(SpreadsheetApp.getActive())
-  .onFormSubmit()
-  .create();
+    .forSpreadsheet(SpreadsheetApp.getActive())
+    .onFormSubmit()
+    .create();
+  
+  Logger.log("✅ Trigger setup complete! Automation is now active.");
+}
+
+// ============================================================
+// HELPER: Test the automation (run this to test)
+// ============================================================
+function testAutomation() {
+  const testData = {
+    timestamp: new Date(),
+    name: "Test User",
+    email: "test@example.com",
+    subject: "Test Technical Issue",
+    message: "I'm having trouble accessing my account. Every time I try to log in, I get an error message saying 'Invalid credentials' even though I'm sure my password is correct."
+  };
+  
+  Logger.log("Testing AI Response...");
+  const response = getAIResponse(testData);
+  Logger.log(JSON.stringify(response, null, 2));
+}
+
+// ============================================================
+// HELPER: Clear all triggers (run if you need to stop automation)
+// ============================================================
+function clearAllTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    ScriptApp.deleteTrigger(trigger);
+  });
+  Logger.log("✅ All triggers removed");
 }
