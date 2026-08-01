@@ -1,0 +1,142 @@
+pip install flask openai flask-cors
+from flask import Flask, render_template_string, request, jsonify
+import openai
+import json
+
+app = Flask(__name__)
+
+# 1. PUT YOUR OPENAI KEY HERE
+openai.api_key = "sk-REPLACE_WITH_YOUR_KEY"
+
+HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Project Feedback Tool</title>
+<style>
+    body { background:#0a0a0a; color:#e0e0e0; font-family: 'Segoe UI', sans-serif; padding:20px; }
+  .container { max-width:900px; margin:auto; }
+    h1 { color:#00ff41; text-align:center; }
+    textarea { width:100%; height:300px; padding:12px; background:#111; border:1px solid #00ff41; color:#e0e0e0; border-radius:8px; font-family: monospace; }
+    button { width:100%; padding:14px; background:#00ff41; color:#000; font-weight:bold; border:none; border-radius:8px; cursor:pointer; font-size:16px; margin-top:10px; }
+    button:hover { background:#39ff14; }
+  .result { margin-top:20px; padding:20px; border:1px solid #00ff41; border-radius:8px; display:none; }
+  .score { font-size:48px; color:#00ff41; text-align:center; }
+  .section { margin:15px 0; }
+  .section h3 { color:#00ff41; }
+    li { background:#111; padding:8px; margin:5px 0; border-left:3px solid #00ff41; }
+  .loader { text-align:center; display:none; color:#00ff41; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>> AI PROJECT FEEDBACK TOOL</h1>
+  <p>Paste your code, project description, or resume. Get instant AI feedback.</p>
+  
+  <textarea id="project_input" placeholder="Paste your Python code, project description, or resume here..."></textarea>
+  <button onclick="getFeedback()">GET AI FEEDBACK</button>
+  
+  <div class="loader" id="loader">AI is analyzing...</div>
+  
+  <div class="result" id="result">
+    <div class="score" id="score">0/100</div>
+    <p id="summary"></p>
+    
+    <div class="section">
+      <h3>✅ What’s Good</h3>
+      <ul id="strengths"></ul>
+    </div>
+    
+    <div class="section">
+      <h3>⚡ How to Improve</h3>
+      <ul id="improvements"></ul>
+    </div>
+    
+    <div class="section">
+      <h3>✨ AI Suggested Rewrite</h3>
+      <pre id="rewrite" style="background:#111; padding:10px; border-radius:5px;"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+async function getFeedback() {
+    const input = document.getElementById('project_input').value;
+    if(!input) { alert("Please paste something first"); return; }
+    
+    document.getElementById('loader').style.display = 'block';
+    document.getElementById('result').style.display = 'none';
+    
+    const res = await fetch('/feedback', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({input})
+    });
+    
+    const data = await res.json();
+    document.getElementById('loader').style.display = 'none';
+    
+    if(data.success) {
+        const d = data.data;
+        document.getElementById('score').innerText = d.score + "/100";
+        document.getElementById('summary').innerText = d.summary;
+        document.getElementById('strengths').innerHTML = d.strengths.map(s => `<li>${s}</li>`).join('');
+        document.getElementById('improvements').innerHTML = d.improvements.map(i => `<li>${i}</li>`).join('');
+        document.getElementById('rewrite').innerText = d.rewritten_example;
+        document.getElementById('result').style.display = 'block';
+    } else {
+        alert("Error: " + data.error);
+    }
+}
+</script>
+</body>
+</html>
+"""
+
+@app.route('/')
+def index():
+    return render_template_string(HTML)
+
+@app.route('/feedback', methods=['POST'])
+def feedback():
+    data = request.json
+    user_input = data.get('input')
+
+    prompt = f"""
+You are an expert senior developer and project reviewer.
+Analyze the following project/code/resume and give constructive feedback.
+
+User Input:
+{user_input}
+
+Return ONLY valid JSON with this exact structure:
+{{
+  "score": 0-100,
+  "summary": "2 sentence overall feedback",
+  "strengths": ["point 1", "point 2", "point 3"],
+  "improvements": ["improvement 1", "improvement 2", "improvement 3"],
+  "rewritten_example": "Show 1 improved version of their code/description"
+}}
+Tone: Helpful, direct, professional.
+"""
+
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.4
+        )
+        
+        ai_output = response.choices[0].message.content
+        clean_json = ai_output.replace("```json", "").replace("```", "").strip()
+        result = json.loads(clean_json)
+        
+        return jsonify({"success": True, "data": result})
+    
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
+python app.py
