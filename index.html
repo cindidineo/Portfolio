@@ -3,149 +3,145 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chain-of-Thought + Persona Prompting — Example & Analysis</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Neo - AI Learning Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+    body { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: #fff; min-height:100vh; }
+    header { padding: 20px; text-align: center; background: rgba(0,0,0,0.15); }
+    header h1 { font-size: 2.2rem; }
+    header p { font-size: 1rem; opacity: 0.95; }
+    nav { display: flex; justify-content: center; gap: 20px; padding: 12px; background: rgba(0,0,0,0.18); }
+    nav a { color: #fff; text-decoration: none; font-weight: 600; }
+    .container { max-width: 900px; margin: 30px auto; padding: 18px; }
+    .chat-box { background: #fff; color: #333; border-radius: 15px; padding: 20px; height: 420px; overflow-y: auto; margin-bottom: 12px; }
+    .msg { margin: 10px 0; padding: 10px 15px; border-radius: 10px; max-width: 85%; clear: both; }
+    .user { background: #2575fc; color: #fff; margin-left: auto; float: right; }
+    .neo { background: #f1f3f5; color: #111; margin-right: auto; float: left; }
+    .input-area { display: flex; gap: 10px; align-items:center; }
+    .input-area input[type="text"] { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 1rem; }
+    .input-area select { padding: 10px; border-radius: 10px; border: none; }
+    .input-area button { padding: 12px 20px; border: none; border-radius: 10px; background: #6a11cb; color: #fff; font-weight: bold; cursor: pointer; }
+    footer { text-align: center; padding: 18px; background: rgba(0,0,0,0.15); margin-top: 30px; }
+    footer p a { color: #fff; text-decoration: underline; }
+    @media(max-width:600px){ header h1 { font-size:1.4rem } .chat-box { height: 320px } }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="wrap">
-      <h1>Chain-of-Thought + Persona Prompting</h1>
-      <p class="tagline">How prompting technique impacts AI output — with a budget example and step-by-step calculations</p>
-    </div>
+  <header>
+    <h1>🤖 Meet Neo</h1>
+    <p>Your 24/7 AI Learning Assistant for School & Varsity Students — accurate, step-by-step help for homework and studying.</p>
   </header>
 
-  <main class="wrap">
-    <article>
-      <section id="overview">
-        <h2>Overview</h2>
-        <p>
-          This page demonstrates how adding a Chain-of-Thought (CoT) instruction and a persona (e.g., "senior business analyst") to an AI prompt yields clearer, verifiable, and more useful outputs for business decisions.
-        </p>
-        <p class="note">
-          Below we also take a real budget example from your note and present improved text, clear assumptions, step-by-step calculations, and recommendations.
-        </p>
-      </section>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="english-levels.html">English Levels</a>
+  </nav>
 
-      <section id="problem">
-        <h2>Problem statement</h2>
-        <p>
-          A company has an <strong>R120,000</strong> budget. Two staffing options are proposed for a project that lasts <strong>3 months</strong>:
-        </p>
-        <ul>
-          <li><strong>Option A</strong>: Hire 2 junior developers at R25,000 each per month.</li>
-          <li><strong>Option B</strong>: Hire 1 senior developer at R50,000 per month and spend R20,000 on AI tools (one-time).</li>
-        </ul>
-        <p>
-          Question: Which option fits the budget and which should be recommended?
-        </p>
-        <p class="clarify">
-          Important: The original prompt is ambiguous about whether the R120,000 budget is a total budget for the entire project or a monthly budget. Both interpretations are analyzed below.
-        </p>
-      </section>
+  <div class="container">
+    <h2>Ask Neo Anything 📚</h2>
+    <p>Stuck on Math, Science, History, or need help with an essay? Choose grade and subject so Neo answers correctly for your level.</p>
 
-      <section id="analysis">
-        <h2>Analysis & calculations</h2>
+    <div class="chat-box" id="chatBox" role="log" aria-live="polite">
+      <div class="msg neo">Hi! I'm Neo 👋 I'm here to help you with any subject, any grade. Tell me your question, select your grade and subject, and I'll give a clear step-by-step answer.</div>
+    </div>
 
-        <h3>Assumption 1 — Budget = R120,000 total for the entire 3-month project</h3>
-        <p>Compute total cost of each option over 3 months.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+      <div style="display:flex;gap:8px;">
+        <select id="gradeSelect" aria-label="Select grade">
+          <option value="">Select Grade (optional)</option>
+          <option>Grade R</option>
+          <option>Grade 1</option>
+          <option>Grade 2</option>
+          <option>Grade 3</option>
+          <option>Grade 4</option>
+          <option>Grade 5</option>
+          <option>Grade 6</option>
+          <option>Grade 7</option>
+          <option>Grade 8</option>
+          <option>Grade 9</option>
+          <option>Grade 10</option>
+          <option>Grade 11</option>
+          <option>Grade 12</option>
+          <option>Varsity</option>
+        </select>
 
-        <div class="calculation">
-          <h4>Option A (2 juniors)</h4>
-          <ol>
-            <li>Monthly cost per junior = R25,000</li>
-            <li>Two juniors monthly cost = 2 × R25,000 = R50,000 per month</li>
-            <li>Total for 3 months = R50,000 × 3 = R150,000</li>
-            <li>Compare to budget: R150,000 &gt; R120,000 → Exceeds budget by R30,000</li>
-          </ol>
+        <select id="subjectSelect" aria-label="Select subject">
+          <option value="">Subject (optional)</option>
+          <option>Math</option>
+          <option>Science</option>
+          <option>English</option>
+          <option>History</option>
+          <option>Geography</option>
+          <option>Computer Science</option>
+          <option>Other</option>
+        </select>
+      </div>
 
-          <h4>Option B (1 senior + AI tools)</h4>
-          <ol>
-            <li>Senior monthly cost = R50,000</li>
-            <li>Cost for 3 months = R50,000 × 3 = R150,000</li>
-            <li>One-time AI tools = R20,000</li>
-            <li>Total cost = R150,000 + R20,000 = R170,000</li>
-            <li>Compare to budget: R170,000 &gt; R120,000 → Exceeds budget by R50,000</li>
-          </ol>
-        </div>
+      <div class="input-area">
+        <input type="text" id="userInput" placeholder="Ask: Explain photosynthesis for Grade 7..." aria-label="Question input">
+        <button id="sendBtn">Send</button>
+      </div>
+    </div>
+  </div>
 
-        <p class="result">
-          Conclusion under Assumption 1: Neither option fits a total budget of R120,000. Option A costs R150,000 and Option B costs R170,000.
-        </p>
+  <footer>
+    <h3>Contact Neo Support</h3>
+    <p>Email: <a href="mailto:cindidino793@mail.com">cindidino793@mail.com</a></p>
+    <p>WhatsApp/Call: <a href="tel:0652593795">065 259 3795</a></p>
+    <p>© 2026 Neo AI Assistant. Made for learners.</p>
+  </footer>
 
-        <hr />
+  <script>
+    const chatBox = document.getElementById('chatBox');
+    const input = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const gradeSelect = document.getElementById('gradeSelect');
+    const subjectSelect = document.getElementById('subjectSelect');
 
-        <h3>Assumption 2 — Budget = R120,000 per month (i.e., monthly runway)</h3>
-        <p>Compute monthly and 3-month totals:</p>
+    function appendMessage(content, cls){
+      const div = document.createElement('div');
+      div.className = 'msg ' + cls;
+      div.innerHTML = content;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
-        <div class="calculation">
-          <h4>Option A (2 juniors)</h4>
-          <ol>
-            <li>Two juniors monthly cost = R50,000</li>
-            <li>Monthly budget R120,000 &gt; R50,000 → Affordable per month</li>
-            <li>Total for 3 months = R150,000 &lt; total available across 3 months (R360,000)</li>
-          </ol>
+    async function sendMessage(){
+      const q = input.value.trim();
+      if(!q) return;
+      appendMessage(q, 'user');
+      input.value = '';
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Thinking...';
 
-          <h4>Option B (1 senior + AI tools)</h4>
-          <ol>
-            <li>Senior monthly cost = R50,000</li>
-            <li>One-time AI tools = R20,000</li>
-            <li>Monthly cost is R50,000 (affordable), and the AI tools are a small one-time spend</li>
-            <li>Total for 3 months = R170,000 &lt; total available across 3 months (R360,000)</li>
-          </ol>
-        </div>
+      try{
+        const resp = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ q, grade: gradeSelect.value, subject: subjectSelect.value })
+        });
 
-        <p class="result">
-          Conclusion under Assumption 2: Both options are affordable if the R120,000 is a monthly budget; the company can easily fund either option.
-        </p>
-      </section>
+        if(!resp.ok){
+          const txt = await resp.text();
+          appendMessage('Sorry — server error: ' + txt, 'neo');
+        } else {
+          const data = await resp.json();
+          appendMessage(data.answer.replace(/\n/g, '<br>'), 'neo');
+        }
+      } catch(err){
+        appendMessage('Network error. Please try again later.', 'neo');
+        console.error(err);
+      } finally{
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send';
+      }
+    }
 
-      <section id="recommendation">
-        <h2>Recommendation</h2>
-        <p>
-          Because the original input did not state whether R120,000 is total or per-month, the most important first step is to clarify that point. After clarifying, choose based on these trade-offs:
-        </p>
-
-        <ul>
-          <li><strong>If R120,000 is total for 3 months:</strong> Neither option is currently feasible. Consider alternatives:
-            <ul>
-              <li>Negotiate shorter contract duration or lower monthly rates.</li>
-              <li>Hire a single junior (R25,000/month) or a contractor for part-time work.</li>
-              <li>Re-scope the project or phase it to fit the R120,000 limit.</li>
-            </ul>
-          </li>
-          <li><strong>If R120,000 is monthly:</strong> Both options are affordable. Choose based on expected outcomes:
-            <ul>
-              <li>Option A (2 juniors) may allow more developer throughput but could require stronger senior oversight.</li>
-              <li>Option B (senior + AI tools) could yield higher-quality design and faster delivery per developer-day, and AI tools might boost individual productivity. If the project needs complex architecture or leadership, prefer Option B.</li>
-            </ul>
-          </li>
-        </ul>
-
-        <p class="final">
-          Practical suggestion: Clarify budget timing (total vs monthly). If total, re-budget or consider a phased approach; if monthly, prefer Option B when you need senior leadership and quality, otherwise Option A for parallel throughput and lower single-person risk.
-        </p>
-      </section>
-
-      <section id="prompting-insight">
-        <h2>Why Chain-of-Thought + Persona helps</h2>
-        <p>
-          The plain prompt produced a short, vague answer. Adding a CoT instruction and a persona (e.g., "You are a senior business analyst and financial consultant. Think step-by-step before answering.") forces the model to:
-        </p>
-        <ul>
-          <li>Make assumptions explicit (or ask for clarifications).</li>
-          <li>Show intermediate calculations so the user can verify them.</li>
-          <li>Provide structured reasoning and a clear recommendation that aligns with business judgment.</li>
-        </ul>
-        <p class="small">
-          In practice, always include instructions if you want the model to show work: e.g., "Show your calculations and reasoning clearly" and mention the persona if you want domain-appropriate framing.
-        </p>
-      </section>
-
-      <footer class="meta">
-        <p>Generated from: a short 'Chain-of-Thought' experiment note. Improved, clarified, and converted to a webpage.</p>
-        <p class="muted">© Prompt engineering demo</p>
-      </footer>
-    </article>
-  </main>
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') sendMessage(); });
+  </script>
 </body>
 </html>
