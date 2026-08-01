@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nexora Task Tracker — Single File</title>
+  <style>
+    :root { --bg:#0A0A0A; --card:#111; --accent:#FF3131; --muted:#888; --text:#fff; --panel:#121212; }
+    * { box-sizing: border-box; }
+    body { background:var(--bg); color:var(--text); font-family:Inter, Arial, sans-serif; padding:20px; max-width:900px; margin:0 auto; }
+    header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+    h1 { color:var(--accent); margin:0; font-size:20px; }
+    .card { background:var(--panel); padding:16px; border-radius:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.6); }
+    input, textarea, button, select { width:100%; padding:10px 12px; margin:8px 0; border-radius:8px; border:1px solid #222; background:#0f0f0f; color:var(--text); }
+    button { background:var(--accent); border:none; color:#fff; font-weight:600; cursor:pointer; }
+    button.ghost { background:transparent; border:1px solid #333; color:var(--muted); }
+    button.small { padding:6px 10px; width:auto; display:inline-block; }
+    .flex { display:flex; gap:12px; align-items:center; }
+    .row { display:flex; gap:12px; }
+    .task { background:var(--card); padding:14px; margin:10px 0; border-radius:10px; border-left:4px solid var(--accent); }
+    .task h4 { margin:0 0 6px 0; }
+    .task p { margin:0 0 8px 0; color:var(--muted); }
+    .task .meta { font-size:12px; color:var(--muted); margin-bottom:8px; }
+    .task-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .hidden { display:none; }
+    .auth-center { max-width:420px; margin:40px auto; }
+    .top-row { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+    #tasks { margin-top:12px; }
+    pre.json-block { background:#0b0b0b; padding:12px; border-radius:8px; color:#dcdcdc; overflow:auto; max-height:240px; }
+    footer { margin-top:18px; color:var(--muted); font-size:13px; text-align:center; }
+    @media (min-width:700px){
+      .row .col-2 { flex:1; }
+      .row .col-1 { flex:2; }
+    }
+  </style>
+</head>
+<body>
+
+<!--
+SQL schema (for reference):
+create table tasks (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users not null,
+  title text not null,
+  description text,
+  status text default 'pending',
+  created_at timestamp with time zone default now()
+);
+alter table tasks enable row level security;
+create policy "Users can only see their own tasks" 
+on tasks for all using (auth.uid() = user_id);
+-->
+
+<!-- AUTH SCREEN -->
+<div id="auth" class="auth-center card">
+  <h1 style="text-align:center">NEXORA TASK TRACKER</h1>
+  <p style="color:var(--muted); text-align:center; margin-top:6px;">Single-file demo. Uses localStorage by default. To use Supabase, set the keys in the script.</p>
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+  <div class="row">
+    <div style="flex:1">
+      <button id="signupBtn">Sign Up (Local)</button>
+    </div>
+    <div style="flex:1">
+      <button id="signinBtn" class="ghost">Login (Local)</button>
+    </div>
+  </div>
+  <p id="auth-msg" style="color:var(--muted); margin-top:8px;"></p>
+  <hr style="border:none; height:1px; background:#111; margin:12px 0;">
+  <div style="font-size:13px; color:var(--muted);">
+    <strong>Optional Supabase:</strong>
+    <p style="margin:8px 0;">To enable Supabase mode, open index.html and set SUPABASE_URL and SUPABASE_KEY in the script. (No keys are set by default.)</p>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="app" class="hidden">
+  <div class="top-row">
+    <h1>My Tasks</h1>
+    <div class="flex">
+      <button id="exportJson" class="small ghost">Export JSON</button>
+      <button id="logoutBtn" class="small">Logout</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Add New Task</h3>
+    <input id="title" placeholder="Task Title" />
+    <textarea id="desc" placeholder="Description" rows="3"></textarea>
+    <div style="display:flex; gap:8px;">
+      <button id="createBtn">Create Task</button>
+      <select id="statusSelect" style="width:160px;">
+        <option value="pending">Pending</option>
+        <option value="in-progress">In Progress</option>
+        <option value="done">Done</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="tasks"></div>
+
+  <div style="margin-top:12px">
+    <details>
+      <summary style="cursor:pointer; color:var(--muted)">Sample JSON data (click to expand)</summary>
+      <pre id="json-sample" class="json-block"></pre>
+    </details>
+  </div>
+</div>
+
+<footer>
+  Demo app — localStorage mode included. Not secure for production authentication; for production use, enable Supabase and secure your keys.
+</footer>
+
+<script>
+/*
+  Single-file task tracker.
+  - Default: localStorage mode (no network)
+  - Optional: Supabase mode (set SUPABASE_URL and SUPABASE_KEY below)
+  To enable Supabase:
+    1) Add the supabase client script (see commented tag below), OR include your own build.
+    2) Set SUPABASE_URL and SUPABASE_KEY constants to your project's values.
+    3) The app will then use Supabase for auth and tasks.
+*/
+
+/* Optional: uncomment the script tag below to include supabase client (only if using Supabase mode)
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+*/
+
+const SUPABASE_URL = ''; // <-- put your https://...supabase.co URL here to enable Supabase mode
+const SUPABASE_KEY = ''; // <-- put your anon/public key here
+
+const useSupabase = SUPABASE_URL && SUPABASE_KEY;
+let supabase = null;
+if(useSupabase){
+  if(window.supabase && window.supabase.createClient){
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  } else {
+    console.warn('Supabase client not found. Make sure to include the supabase script tag if you want Supabase mode.');
+  }
+}
+
+// Sample JSON data embedded for offline/demo use
+const SAMPLE_TASKS = [
+  {
+    "id":"t1",
+    "user_id":"u_demo",
+    "title":"Welcome to Nexora",
+    "description":"This is a sample task. Edit or delete it.",
+    "status":"pending",
+    "created_at":"2026-08-01T10:00:00Z"
+  },
+  {
+    "id":"t2",
+    "user_id":"u_demo",
+    "title":"Try the app",
+    "description":"Create a new task using the form above.",
+    "status":"in-progress",
+    "created_at":"2026-08-01T11:00:00Z"
+  }
+];
+
+/* ---------- Utilities ---------- */
+function uuidv4(){
+  // simple UUID generator for demo purposes
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+function escapeHtml(s){
+  if(!s) return '';
+  return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+}
+
+/* ---------- Local storage helpers ---------- */
+const LS_USERS_KEY = 'nexora_users_v1';
+const LS_CURRENT_KEY = 'nexora_current_user_v1';
+const LS_TASKS_KEY = 'nexora_tasks_v1';
+
+function getUsers(){
+  try { return JSON.parse(localStorage.getItem(LS_USERS_KEY) || '[]'); } catch(e){ return []; }
+}
+function saveUsers(u){ localStorage.setItem(LS_USERS_KEY, JSON.stringify(u || [])); }
+function setCurrentUser(u){ localStorage.setItem(LS_CURRENT_KEY, JSON.stringify(u || null)); }
+function getCurrentUser(){ try { return JSON.parse(localStorage.getItem(LS_CURRENT_KEY) || 'null'); } catch(e){ return null; } }
+function getAllTasks(){ try { return JSON.parse(localStorage.getItem(LS_TASKS_KEY) || '[]'); } catch(e){ return []; } }
+function saveAllTasks(t){ localStorage.setItem(LS_TASKS_KEY, JSON.stringify(t || [])); }
+
+/* Initialize sample data if none exists */
+if(!localStorage.getItem(LS_TASKS_KEY)){
+  saveAllTasks(SAMPLE_TASKS);
+  document.getElementById('json-sample').innerText = JSON.stringify(SAMPLE_TASKS, null, 2);
+} else {
+  document.getElementById('json-sample').innerText = JSON.stringify(getAllTasks(), null, 2);
+}
+
+/* ---------- DOM references ---------- */
+const authBox = document.getElementById('auth');
+const appBox = document.getElementById('app');
+const authMsg = document.getElementById('auth-msg');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const signupBtn = document.getElementById('signupBtn');
+const signinBtn = document.getElementById('signinBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const createBtn = document.getElementById('createBtn');
+const titleInput = document.getElementById('title');
+const descInput = document.getElementById('desc');
+const tasksDiv = document.getElementById('tasks');
+const exportJsonBtn = document.getElementById('exportJson');
+const statusSelect = document.getElementById('statusSelect');
+
+/* ---------- Auth (local / supabase) ---------- */
+async function signUp(){
+  const email = emailInput.value.trim();
+  const pw = passwordInput.value.trim();
+  if(!email || !pw){ authMsg.innerText = 'Email and password required'; return; }
+  if(useSupabase && supabase){
+    const { data, error } = await supabase.auth.signUp({ email, password: pw });
+    if(error) authMsg.innerText = error.message;
+    else authMsg.innerText = 'Sign-up sent: check your email (Supabase)';
+  } else {
+    const users = getUsers();
+    if(users.find(u=>u.email===email)){ authMsg.innerText = 'User already exists (local)'; return; }
+    const user = { id: uuidv4(), email, password: pw };
+    users.push(user);
+    saveUsers(users);
+    setCurrentUser({ id: user.id, email: user.email });
+    authMsg.innerText = 'Signed up (local)';
+    loadApp({ id: user.id, email: user.email });
+  }
+}
+async function signIn(){
+  const email = emailInput.value.trim();
+  const pw = passwordInput.value.trim();
+  if(!email || !pw){ authMsg.innerText = 'Email and password required'; return; }
+  if(useSupabase && supabase){
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
+    if(error) authMsg.innerText = error.message;
+    else loadApp(data.user);
+  } else {
+    const users = getUsers();
+    const user = users.find(u=>u.email===email && u.password===pw);
+    if(!user){ authMsg.innerText = 'Invalid credentials (local)'; return; }
+    setCurrentUser({ id: user.id, email: user.email });
+    authMsg.innerText = 'Signed in (local)';
+    loadApp({ id: user.id, email: user.email });
+  }
+}
+async function logout(){
+  if(useSupabase && supabase){
+    await supabase.auth.signOut();
+  }
+  setCurrentUser(null);
+  currentUser = null;
+  appBox.classList.add('hidden');
+  authBox.classList.remove('hidden');
+}
+
+/* ---------- CRUD operations (local / supabase) ---------- */
+let currentUser = null;
+
+async function loadApp(user){
+  currentUser = user;
+  authBox.classList.add('hidden');
+  appBox.classList.remove('hidden');
+  fetchTasks();
+}
+
+async function addTask(){
+  const title = titleInput.value.trim();
+  const desc = descInput.value.trim();
+  const status = statusSelect.value;
+  if(!title){ alert('Title required'); return; }
+
+  if(useSupabase && supabase){
+    const payload = { title, description: desc, status, user_id: currentUser.id };
+    const { data, error } = await supabase.from('tasks').insert([payload]);
+    if(error) return alert('Error creating task: ' + error.message);
+  } else {
+    const tasks = getAllTasks();
+    const t = { id: uuidv4(), user_id: currentUser.id, title, description: desc, status, created_at: new Date().toISOString() };
+    tasks.unshift(t);
+    saveAllTasks(tasks);
+    document.getElementById('json-sample').innerText = JSON.stringify(tasks, null, 2);
+  }
+  titleInput.value = '';
+  descInput.value = '';
+  fetchTasks();
+}
+
+async function fetchTasks(){
+  if(useSupabase && supabase){
+    const { data, error } = await supabase.from('tasks').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+    if(error) { tasksDiv.innerHTML = '<div class="card">Error loading tasks: '+escapeHtml(error.message)+'</div>'; return; }
+    renderTasks(data || []);
+  } else {
+    const tasks = getAllTasks().filter(t => t.user_id === currentUser.id);
+    tasks.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+    renderTasks(tasks);
+  }
+}
+
+function renderTasks(list){
+  if(!list.length){ tasksDiv.innerHTML = '<div class="card">No tasks yet. Add one above.</div>'; return; }
+  tasksDiv.innerHTML = list.map(t => {
+    const title = escapeHtml(t.title);
+    const desc = escapeHtml(t.description || '');
+    const when = new Date(t.created_at || Date.now()).toLocaleString();
+    const id = t.id;
+    const status = t.status || 'pending';
+    return `
+      <div class="task card" data-id="${id}">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h4>${title}</h4>
+            <div class="meta">${escapeHtml(status)} · ${when}</div>
+          </div>
+          <div style="text-align:right;">
+            <button class="small ghost" onclick="editTask('${id}')">Edit</button>
+            <button class="small" onclick="deleteTask('${id}')" style="background:#555;">Delete</button>
+          </div>
+        </div>
+        <p>${desc}</p>
+      </div>
+    `;
+  }).join('');
+}
+
+/* Edit task (prompt-based for simplicity) */
+async function editTask(id){
+  const newTitle = prompt('New title:');
+  if(newTitle === null) return;
+  const newDesc = prompt('New description (leave blank to keep):', '') ?? '';
+  const newStatus = prompt('New status (pending, in-progress, done):', 'pending') || 'pending';
+
+  if(useSupabase && supabase){
+    const { error } = await supabase.from('tasks').update({ title: newTitle, description: newDesc, status: newStatus }).eq('id', id);
+    if(error) return alert('Update error: ' + error.message);
+  } else {
+    const tasks = getAllTasks();
+    const idx = tasks.findIndex(t => t.id === id && t.user_id === currentUser.id);
+    if(idx === -1) return alert('Task not found');
+    tasks[idx].title = newTitle;
+    if(newDesc) tasks[idx].description = newDesc;
+    tasks[idx].status = newStatus;
+    saveAllTasks(tasks);
+    document.getElementById('json-sample').innerText = JSON.stringify(tasks, null, 2);
+  }
+  fetchTasks();
+}
+
+async function deleteTask(id){
+  if(!confirm('Delete this task?')) return;
+  if(useSupabase && supabase){
+    const { error } = await supabase.from('tasks').delete().eq('id', id);
+    if(error) return alert('Delete error: ' + error.message);
+  } else {
+    let tasks = getAllTasks();
+    tasks = tasks.filter(t => !(t.id === id && t.user_id === currentUser.id));
+    saveAllTasks(tasks);
+    document.getElementById('json-sample').innerText = JSON.stringify(tasks, null, 2);
+  }
+  fetchTasks();
+}
+
+/* ---------- Attach events ---------- */
+signupBtn.addEventListener('click', () => signUp());
+signinBtn.addEventListener('click', () => signIn());
+logoutBtn.addEventListener('click', () => logout());
+createBtn.addEventListener('click', () => addTask());
+exportJsonBtn.addEventListener('click', () => {
+  const tasks = getAllTasks();
+  const blob = new Blob([JSON.stringify(tasks, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'tasks.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+/* ---------- On load: check logged-in state ---------- */
+(async function init(){
+  if(useSupabase && supabase){
+    // Try to get supabase user
+    try {
+      const { data } = await supabase.auth.getUser();
+      if(data && data.user){ loadApp(data.user); return; }
+    } catch(e){}
+  } else {
+    const u = getCurrentUser();
+    if(u){ loadApp(u); return; }
+  }
+  // otherwise stay on auth screen
+})();
+</script>
+</body>
+</html>
