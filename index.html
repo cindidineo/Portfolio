@@ -1,192 +1,151 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ava - Neurofive Sales Assistant</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chain-of-Thought + Persona Prompting — Example & Analysis</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <span class="logo-icon">🤖</span>
-                <span class="logo-text">Ava Assistant</span>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="#home" class="nav-link active">Home</a></li>
-                <li><a href="#features" class="nav-link">Features</a></li>
-                <li><a href="#products" class="nav-link">Products</a></li>
-                <li><a href="#chat" class="nav-link">Chat Now</a></li>
+  <header class="site-header">
+    <div class="wrap">
+      <h1>Chain-of-Thought + Persona Prompting</h1>
+      <p class="tagline">How prompting technique impacts AI output — with a budget example and step-by-step calculations</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <article>
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>
+          This page demonstrates how adding a Chain-of-Thought (CoT) instruction and a persona (e.g., "senior business analyst") to an AI prompt yields clearer, verifiable, and more useful outputs for business decisions.
+        </p>
+        <p class="note">
+          Below we also take a real budget example from your note and present improved text, clear assumptions, step-by-step calculations, and recommendations.
+        </p>
+      </section>
+
+      <section id="problem">
+        <h2>Problem statement</h2>
+        <p>
+          A company has an <strong>R120,000</strong> budget. Two staffing options are proposed for a project that lasts <strong>3 months</strong>:
+        </p>
+        <ul>
+          <li><strong>Option A</strong>: Hire 2 junior developers at R25,000 each per month.</li>
+          <li><strong>Option B</strong>: Hire 1 senior developer at R50,000 per month and spend R20,000 on AI tools (one-time).</li>
+        </ul>
+        <p>
+          Question: Which option fits the budget and which should be recommended?
+        </p>
+        <p class="clarify">
+          Important: The original prompt is ambiguous about whether the R120,000 budget is a total budget for the entire project or a monthly budget. Both interpretations are analyzed below.
+        </p>
+      </section>
+
+      <section id="analysis">
+        <h2>Analysis & calculations</h2>
+
+        <h3>Assumption 1 — Budget = R120,000 total for the entire 3-month project</h3>
+        <p>Compute total cost of each option over 3 months.</p>
+
+        <div class="calculation">
+          <h4>Option A (2 juniors)</h4>
+          <ol>
+            <li>Monthly cost per junior = R25,000</li>
+            <li>Two juniors monthly cost = 2 × R25,000 = R50,000 per month</li>
+            <li>Total for 3 months = R50,000 × 3 = R150,000</li>
+            <li>Compare to budget: R150,000 &gt; R120,000 → Exceeds budget by R30,000</li>
+          </ol>
+
+          <h4>Option B (1 senior + AI tools)</h4>
+          <ol>
+            <li>Senior monthly cost = R50,000</li>
+            <li>Cost for 3 months = R50,000 × 3 = R150,000</li>
+            <li>One-time AI tools = R20,000</li>
+            <li>Total cost = R150,000 + R20,000 = R170,000</li>
+            <li>Compare to budget: R170,000 &gt; R120,000 → Exceeds budget by R50,000</li>
+          </ol>
+        </div>
+
+        <p class="result">
+          Conclusion under Assumption 1: Neither option fits a total budget of R120,000. Option A costs R150,000 and Option B costs R170,000.
+        </p>
+
+        <hr />
+
+        <h3>Assumption 2 — Budget = R120,000 per month (i.e., monthly runway)</h3>
+        <p>Compute monthly and 3-month totals:</p>
+
+        <div class="calculation">
+          <h4>Option A (2 juniors)</h4>
+          <ol>
+            <li>Two juniors monthly cost = R50,000</li>
+            <li>Monthly budget R120,000 &gt; R50,000 → Affordable per month</li>
+            <li>Total for 3 months = R150,000 &lt; total available across 3 months (R360,000)</li>
+          </ol>
+
+          <h4>Option B (1 senior + AI tools)</h4>
+          <ol>
+            <li>Senior monthly cost = R50,000</li>
+            <li>One-time AI tools = R20,000</li>
+            <li>Monthly cost is R50,000 (affordable), and the AI tools are a small one-time spend</li>
+            <li>Total for 3 months = R170,000 &lt; total available across 3 months (R360,000)</li>
+          </ol>
+        </div>
+
+        <p class="result">
+          Conclusion under Assumption 2: Both options are affordable if the R120,000 is a monthly budget; the company can easily fund either option.
+        </p>
+      </section>
+
+      <section id="recommendation">
+        <h2>Recommendation</h2>
+        <p>
+          Because the original input did not state whether R120,000 is total or per-month, the most important first step is to clarify that point. After clarifying, choose based on these trade-offs:
+        </p>
+
+        <ul>
+          <li><strong>If R120,000 is total for 3 months:</strong> Neither option is currently feasible. Consider alternatives:
+            <ul>
+              <li>Negotiate shorter contract duration or lower monthly rates.</li>
+              <li>Hire a single junior (R25,000/month) or a contractor for part-time work.</li>
+              <li>Re-scope the project or phase it to fit the R120,000 limit.</li>
             </ul>
-        </div>
-    </nav>
+          </li>
+          <li><strong>If R120,000 is monthly:</strong> Both options are affordable. Choose based on expected outcomes:
+            <ul>
+              <li>Option A (2 juniors) may allow more developer throughput but could require stronger senior oversight.</li>
+              <li>Option B (senior + AI tools) could yield higher-quality design and faster delivery per developer-day, and AI tools might boost individual productivity. If the project needs complex architecture or leadership, prefer Option B.</li>
+            </ul>
+          </li>
+        </ul>
 
-    <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="hero-content">
-            <h1>Meet Ava</h1>
-            <p class="hero-subtitle">Your AI-Powered Sales Assistant</p>
-            <p class="hero-description">Get instant answers about Neurofive products. Ava is here 24/7 to help you find the perfect solution.</p>
-            <a href="#chat" class="cta-button">Start Chatting Now</a>
-        </div>
-        <div class="hero-image">
-            <div class="avatar-circle">
-                <span class="avatar-text">👋</span>
-            </div>
-        </div>
-    </section>
+        <p class="final">
+          Practical suggestion: Clarify budget timing (total vs monthly). If total, re-budget or consider a phased approach; if monthly, prefer Option B when you need senior leadership and quality, otherwise Option A for parallel throughput and lower single-person risk.
+        </p>
+      </section>
 
-    <!-- Features Section -->
-    <section id="features" class="features">
-        <div class="section-header">
-            <h2>Why Choose Ava?</h2>
-            <p>Intelligent, helpful, and always available</p>
-        </div>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3>Instant Responses</h3>
-                <p>Get answers to your questions in seconds, any time of day</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎯</div>
-                <h3>Personalized</h3>
-                <p>Ava asks questions to understand your needs and recommends the perfect product</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">💼</div>
-                <h3>Professional</h3>
-                <p>Friendly yet professional assistance for all your business needs</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <h3>Secure</h3>
-                <p>Your conversations are private and protected with industry-standard encryption</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🚀</div>
-                <h3>AI-Powered</h3>
-                <p>Powered by advanced OpenAI technology for smart, contextual responses</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📱</div>
-                <h3>Always Available</h3>
-                <p>Works on desktop, tablet, and mobile - chat from anywhere</p>
-            </div>
-        </div>
-    </section>
+      <section id="prompting-insight">
+        <h2>Why Chain-of-Thought + Persona helps</h2>
+        <p>
+          The plain prompt produced a short, vague answer. Adding a CoT instruction and a persona (e.g., "You are a senior business analyst and financial consultant. Think step-by-step before answering.") forces the model to:
+        </p>
+        <ul>
+          <li>Make assumptions explicit (or ask for clarifications).</li>
+          <li>Show intermediate calculations so the user can verify them.</li>
+          <li>Provide structured reasoning and a clear recommendation that aligns with business judgment.</li>
+        </ul>
+        <p class="small">
+          In practice, always include instructions if you want the model to show work: e.g., "Show your calculations and reasoning clearly" and mention the persona if you want domain-appropriate framing.
+        </p>
+      </section>
 
-    <!-- Products Section -->
-    <section id="products" class="products">
-        <div class="section-header">
-            <h2>Neurofive Products</h2>
-            <p>Explore our solutions designed for your success</p>
-        </div>
-        <div class="products-grid">
-            <div class="product-card">
-                <div class="product-icon">📱</div>
-                <h3>Neurofive App</h3>
-                <p>Productivity and AI tools for teams</p>
-                <ul class="product-features">
-                    <li>✓ Collaboration tools</li>
-                    <li>✓ AI-powered tasks</li>
-                    <li>✓ Team management</li>
-                </ul>
-            </div>
-            <div class="product-card">
-                <div class="product-icon">🛍️</div>
-                <h3>Neurofive Store</h3>
-                <p>Tech gadgets, headphones, smart watches, laptops</p>
-                <ul class="product-features">
-                    <li>✓ Latest gadgets</li>
-                    <li>✓ Premium quality</li>
-                    <li>✓ Fast shipping</li>
-                </ul>
-            </div>
-            <div class="product-card">
-                <div class="product-icon">☁️</div>
-                <h3>Neurofive Cloud</h3>
-                <p>Secure cloud storage and backup for businesses</p>
-                <ul class="product-features">
-                    <li>✓ Secure storage</li>
-                    <li>✓ Auto backups</li>
-                    <li>✓ 99.9% uptime</li>
-                </ul>
-            </div>
-        </div>
-    </section>
-
-    <!-- Chat Section -->
-    <section id="chat" class="chat-section">
-        <div class="chat-wrapper">
-            <div class="chat-container">
-                <div class="chat-header">
-                    <h2>💬 Chat with Ava</h2>
-                    <p>Ask me anything about Neurofive products</p>
-                </div>
-                
-                <div class="messages" id="messages">
-                    <div class="message ava">
-                        <div class="message-avatar">🤖</div>
-                        <div class="message-content">
-                            Hi there! 👋 I'm Ava, your Neurofive Sales Assistant. How can I help you today? Are you looking for productivity tools, tech gadgets, or cloud solutions?
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="input-area">
-                    <input 
-                        type="text" 
-                        id="messageInput" 
-                        placeholder="Type your message here..." 
-                        autocomplete="off"
-                    >
-                    <button id="sendBtn" onclick="sendMessage()" class="send-button">Send</button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h4>Ava Assistant</h4>
-                <p>Your AI-powered sales companion for Neurofive Solutions</p>
-            </div>
-            <div class="footer-section">
-                <h4>Quick Links</h4>
-                <ul>
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#features">Features</a></li>
-                    <li><a href="#products">Products</a></li>
-                    <li><a href="#chat">Chat</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Contact</h4>
-                <ul>
-                    <li>Email: sales@neurofive.com</li>
-                    <li>Phone: +1 (555) 000-0000</li>
-                    <li>Website: neurofive.com</li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h4>Follow Us</h4>
-                <div class="social-links">
-                    <a href="#">Twitter</a>
-                    <a href="#">LinkedIn</a>
-                    <a href="#">Facebook</a>
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2026 Neurofive Solutions. All rights reserved. Built with ❤️ by Ava</p>
-        </div>
-    </footer>
-
-    <script src="script.js"></script>
+      <footer class="meta">
+        <p>Generated from: a short 'Chain-of-Thought' experiment note. Improved, clarified, and converted to a webpage.</p>
+        <p class="muted">© Prompt engineering demo</p>
+      </footer>
+    </article>
+  </main>
 </body>
 </html>
