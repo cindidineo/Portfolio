@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-07-30T21:05:12",
+  "url": "https://www.google.com",
+  "status": "down",
+  "status_code": null,
+  "response_time_ms": null,
+  "error": "Connection timed out"
+}
