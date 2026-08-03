@@ -1,0 +1,960 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neo — AI Learning Assistant</title>
+  <style>
+    :root {
+      --bg: #0f172a
+;
+      --bg2: #111827
+;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-strong: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc
+;
+      --muted: #cbd5e1
+;
+      --accent: #7c3aed
+;
+      --accent2: #2563eb
+;
+      --accent3: #22c55e
+;
+      --border: rgba(255, 255, 255, 0.12);
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(124, 58, 237, 0.35), transparent 28%),
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.25), transparent 24%),
+        linear-gradient(180deg, #020617
+ 0%, #0f172a
+ 35%, #111827
+ 100%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(18px);
+      background: rgba(2, 6, 23, 0.65);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: var(--shadow);
+      font-size: 1.2rem;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: #fff;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      box-shadow: 0 10px 30px rgba(124, 58, 237, 0.35);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: white;
+      border: 1px solid var(--border);
+    }
+
+    .hero {
+      padding: 64px 0 30px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .hero-copy,
+    .hero-panel,
+    .section-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-copy {
+      padding: 36px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0
+;
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: clamp(2.3rem, 5vw, 4.8rem);
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+      margin-bottom: 18px;
+    }
+
+    .hero-copy p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 60ch;
+      margin-bottom: 24px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .trust-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .trust-pill {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: #e2e8f0
+;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .hero-panel {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mini-badge {
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.12);
+      color: #86efac
+;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .level-selector,
+    .subject-selector,
+    .tool-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .selector-title {
+      font-weight: 700;
+      color: #fff;
+      font-size: 0.96rem;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      color: #e2e8f0
+;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+      user-select: none;
+    }
+
+    .chip:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .chip.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      border-color: transparent;
+    }
+
+    .section {
+      padding: 24px 0;
+    }
+
+    .section-card {
+      padding: 28px;
+    }
+
+    .section-title {
+      font-size: clamp(1.4rem, 2.5vw, 2rem);
+      margin-bottom: 10px;
+      letter-spacing: -0.03em;
+    }
+
+    .section-subtitle {
+      color: var(--muted);
+      margin-bottom: 20px;
+      max-width: 70ch;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .card h3 {
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    .card p,
+    .card li {
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .step-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      font-weight: 800;
+    }
+
+    .study-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tool {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      font-weight: 600;
+      color: #e2e8f0
+;
+    }
+
+    .chat-shell {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .chat-box {
+      height: 380px;
+      overflow-y: auto;
+      background: rgba(2, 6, 23, 0.55);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .msg {
+      max-width: 82%;
+      padding: 12px 14px;
+      border-radius: 16px;
+      font-size: 0.96rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      color: white;
+      border-bottom-right-radius: 6px;
+    }
+
+    .msg.neo {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.08);
+      color: #f8fafc
+;
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 6px;
+    }
+
+    .chat-controls {
+      display: grid;
+      gap: 12px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 15px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      outline: none;
+      font-size: 1rem;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #94a3b8
+;
+    }
+
+    select option {
+      color: #0f172a
+;
+    }
+
+    .input-grow {
+      flex: 1 1 260px;
+    }
+
+    .small-note {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .levels-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .level-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+    }
+
+    .level-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .faq {
+      display: grid;
+      gap: 12px;
+    }
+
+    .faq-item {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .faq-item h3 {
+      margin-bottom: 8px;
+    }
+
+    .footer {
+      padding: 30px 0 44px;
+      color: var(--muted);
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      border-top: 1px solid var(--border);
+      padding-top: 22px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: #e2e8f0
+;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .grid-4,
+      .grid-3,
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .level-item {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        padding-top: 34px;
+      }
+
+      .hero-copy,
+      .section-card {
+        padding: 20px;
+      }
+
+      .chat-box {
+        height: 320px;
+      }
+
+      .msg {
+        max-width: 92%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="#home">
+        <div class="logo">N</div>
+        <div>
+          <div>Neo</div>
+          <small style="color: var(--muted); font-weight: 600;">AI Learning Assistant</small>
+        </div>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#home">Home</a>
+        <a href="#chat">Ask Neo</a>
+        <a href="#levels">Levels</a>
+        <a href="#tools">Study Tools</a>
+        <a href="#faq">FAQ</a>
+        <a href="#chat" class="btn btn-primary">Get Started</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="home" class="hero">
+    <div class="container hero-grid">
+      <section class="hero-copy">
+        <div class="eyebrow">📚 Neo helps learners at every level</div>
+        <h1>Study smarter with an AI assistant built for school, college, and university.</h1>
+        <p>
+          Neo explains topics simply, helps with homework, supports exam prep, and adjusts its answers to the learner’s level.
+          Whether you are in primary school, high school, university, or learning as an adult, Neo is built to help.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#chat" class="btn btn-primary">Start Learning</a>
+          <a href="#levels" class="btn btn-secondary">Choose Your Level</a>
+        </div>
+
+        <div class="trust-row">
+          <div class="trust-pill">Simple explanations</div>
+          <div class="trust-pill">All subjects</div>
+          <div class="trust-pill">Level-based answers</div>
+          <div class="trust-pill">Exam support</div>
+        </div>
+      </section>
+
+      <aside class="hero-panel">
+        <div class="panel-top">
+          <div>
+            <div class="selector-title">Learning mode</div>
+            <div class="small-note">Choose who Neo is helping</div>
+          </div>
+          <div class="mini-badge">Live demo</div>
+        </div>
+
+        <div class="level-selector">
+          <div class="selector-title">Select level</div>
+          <div class="chips" id="levelChips">
+            <button class="chip active" data-level="Primary school">Primary school</button>
+            <button class="chip" data-level="High school">High school</button>
+            <button class="chip" data-level="University">University</button>
+            <button class="chip" data-level="Adult learner">Adult learner</button>
+          </div>
+        </div>
+
+        <div class="subject-selector">
+          <div class="selector-title">Select subject</div>
+          <div class="chips" id="subjectChips">
+            <button class="chip active" data-subject="English">English</button>
+            <button class="chip" data-subject="Math">Math</button>
+            <button class="chip" data-subject="Science">Science</button>
+            <button class="chip" data-subject="History">History</button>
+            <button class="chip" data-subject="Business">Business</button>
+          </div>
+        </div>
+
+        <div class="tool-grid">
+          <div class="selector-title">What Neo can do</div>
+          <div class="study-tools">
+            <div class="tool">Explain simply</div>
+            <div class="tool">Summarize notes</div>
+            <div class="tool">Make a quiz</div>
+            <div class="tool">Help with essays</div>
+            <div class="tool">Step-by-step solving</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <section id="chat" class="section">
+    <div class="container section-card">
+      <h2 class="section-title">Ask Neo Anything</h2>
+      <p class="section-subtitle">
+        Type a question, choose a level and subject, and Neo will answer in a way that matches the learner.
+      </p>
+
+      <div class="chat-shell">
+        <div class="chat-box" id="chatBox" aria-live="polite">
+          <div class="msg neo">
+            Hi! I'm Neo 👋 I can help with school subjects, homework, revision, essays, and study questions.
+            Choose a level and subject above, then ask me anything.
+          </div>
+        </div>
+
+        <div class="chat-controls">
+          <div class="input-row">
+            <input class="input-grow" type="text" id="userInput" placeholder="Ask Neo: Explain photosynthesis simply..." />
+            <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+          </div>
+          <div class="small-note">
+            Demo version: Neo responds instantly on the page. You can later connect it to a real AI backend.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container section-card">
+      <h2 class="section-title">How Neo works</h2>
+      <p class="section-subtitle">Neo adapts the explanation based on the learner’s level and subject.</p>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="step-num">1</div>
+          <h3>Select a level</h3>
+          <p>Pick whether the learner is in primary school, high school, university, or learning as an adult.</p>
+        </div>
+        <div class="card">
+          <div class="step-num">2</div>
+          <h3>Choose a subject</h3>
+          <p>Math, English, Science, History, and more — Neo can support many areas of study.</p>
+        </div>
+        <div class="card">
+          <div class="step-num">3</div>
+          <h3>Get the right kind of help</h3>
+          <p>Neo can explain, summarize, quiz, or guide the learner step by step.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="levels" class="section">
+    <div class="container section-card">
+      <h2 class="section-title">Learning levels</h2>
+      <p class="section-subtitle">
+        Neo is designed for everyone — from young learners to university students and adults.
+      </p>
+
+      <div class="levels-list">
+        <div class="level-item">
+          <div>
+            <strong>Primary School</strong>
+            <span style="color: var(--muted);">Simple language, short explanations, and friendly examples.</span>
+          </div>
+          <div style="color:#86efac
+; font-weight:700;">Beginner friendly</div>
+        </div>
+
+        <div class="level-item">
+          <div>
+            <strong>High School</strong>
+            <span style="color: var(--muted);">Homework help, exam prep, summaries, and subject support.</span>
+          </div>
+          <div style="color:#93c5fd
+; font-weight:700;">Study support</div>
+        </div>
+
+        <div class="level-item">
+          <div>
+            <strong>University</strong>
+            <span style="color: var(--muted);">More advanced explanations, essay guidance, and academic support.</span>
+          </div>
+          <div style="color:#c4b5fd
+; font-weight:700;">Academic level</div>
+        </div>
+
+        <div class="level-item">
+          <div>
+            <strong>Adult Learners</strong>
+            <span style="color: var(--muted);">Clear, practical learning for skills development and lifelong learning.</span>
+          </div>
+          <div style="color:#fca5a5
+; font-weight:700;">Flexible learning</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tools" class="section">
+    <div class="container section-card">
+      <h2 class="section-title">Study tools</h2>
+      <p class="section-subtitle">
+        Add these features as your website grows to make Neo more useful for every learner.
+      </p>
+
+      <div class="grid-4">
+        <div class="card">
+          <h3>Explain simply</h3>
+          <p>Neo rewrites difficult topics in easy language.</p>
+        </div>
+        <div class="card">
+          <h3>Summarize notes</h3>
+          <p>Turn long notes into short, clear study points.</p>
+        </div>
+        <div class="card">
+          <h3>Make quizzes</h3>
+          <p>Test understanding with quick practice questions.</p>
+        </div>
+        <div class="card">
+          <h3>Essay help</h3>
+          <p>Get structure, ideas, and writing support.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container section-card">
+      <h2 class="section-title">English levels</h2>
+      <p class="section-subtitle">
+        You can keep this page if you want Neo to help learners improve English by level.
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Beginner — A1</h3>
+          <p>Basic words, alphabet, simple sentences, and common everyday phrases.</p>
+        </div>
+        <div class="card">
+          <h3>Elementary — A2</h3>
+          <p>Daily conversation, simple grammar, and vocabulary for school and life.</p>
+        </div>
+        <div class="card">
+          <h3>Intermediate — B1</h3>
+          <p>Comprehension, paragraphs, essays, and expressing opinions more clearly.</p>
+        </div>
+        <div class="card">
+          <h3>Upper-Intermediate — B2</h3>
+          <p>More complex grammar, stronger writing, and academic language practice.</p>
+        </div>
+        <div class="card">
+          <h3>Advanced — C1</h3>
+          <p>Research, presentations, formal writing, and professional communication.</p>
+        </div>
+        <div class="card">
+          <h3>Proficiency — C2</h3>
+          <p>Near-native fluency, nuance, idioms, and advanced expression.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="section">
+    <div class="container section-card">
+      <h2 class="section-title">Frequently asked questions</h2>
+      <p class="section-subtitle">A few common things people may want to know about Neo.</p>
+
+      <div class="faq">
+        <div class="faq-item">
+          <h3>How does Neo help learners?</h3>
+          <p>Neo explains topics, gives examples, helps with homework, and supports revision at different levels.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Can Neo be used for university students?</h3>
+          <p>Yes. Neo can give more advanced explanations, essay support, summaries, and study guidance for higher education.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Can I add real AI later?</h3>
+          <p>Yes. This ready-to-use website is set up as a front-end demo and can later connect to a backend or AI API.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div>
+        <strong style="color:#fff;">Neo AI Learning Assistant</strong>
+        <div>Helping learners of every level understand, practice, and grow.</div>
+      </div>
+
+      <div class="footer-links">
+        <a href="#home">Home</a>
+        <a href="#chat">Ask Neo</a>
+        <a href="#levels">Levels</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const state = {
+      level: "Primary school",
+      subject: "English"
+    };
+
+    function addMessage(text, sender) {
+      const chatBox = document.getElementById("chatBox");
+      const msg = document.createElement("div");
+      msg.className = `msg ${sender}`;
+      msg.textContent = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function setActiveChip(groupId, value) {
+      const buttons = document.querySelectorAll(`#${groupId} .chip`);
+      buttons.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset[groupId === "levelChips" ? "level" : "subject"] === value);
+      });
+    }
+
+    document.querySelectorAll("#levelChips .chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.level = btn.dataset.level;
+        setActiveChip("levelChips", state.level);
+      });
+    });
+
+    document.querySelectorAll("#subjectChips .chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.subject = btn.dataset.subject;
+        setActiveChip("subjectChips", state.subject);
+      });
+    });
+
+    function getNeoReply(question) {
+      const q = question.toLowerCase();
+
+      const levelHint = {
+        "Primary school": "I'll explain it in very simple words with an easy example.",
+        "High school": "I'll explain it clearly and add useful detail for school work.",
+        "University": "I'll give a more advanced, academic explanation.",
+        "Adult learner": "I'll keep it practical, clear, and easy to apply."
+      }[state.level] || "I'll explain it clearly.";
+
+      const subjectHint = {
+        "English": "I can help with grammar, reading, writing, vocabulary, and essays.",
+        "Math": "I can help solve problems step by step and explain formulas.",
+        "Science": "I can explain scientific ideas, experiments, and concepts.",
+        "History": "I can help you understand events, timelines, and causes.",
+        "Business": "I can help with business concepts, marketing, accounting, and strategy."
+      }[state.subject] || "I can help with your subject.";
+
+      if (q.includes("essay")) {
+        return `${levelHint}\n\nFor ${state.subject}, I can help you with essay structure, ideas, and improving your answer.`;
+      }
+
+      if (q.includes("summary") || q.includes("summarize") || q.includes("summarise")) {
+        return `${levelHint}\n\nI can summarize your notes into shorter study points. Send me the text and I'll make it easier to revise.`;
+      }
+
+      if (q.includes("quiz") || q.includes("test me")) {
+        return `${levelHint}\n\nI can make a short quiz on ${state.subject}. Send me the topic and I'll generate practice questions.`;
+      }
+
+      if (q.includes("math") || q.includes("+") || q.includes("-") || q.includes("÷") || q.includes("/") || q.includes("*")) {
+        return `${levelHint}\n\n${subjectHint} If you share the exact question, I'll solve it step by step.`;
+      }
+
+      if (q.includes("english") || q.includes("grammar") || q.includes("vocabulary") || q.includes("write")) {
+        return `${levelHint}\n\n${subjectHint} If you want, I can correct your writing, explain grammar, or help build stronger vocabulary.`;
+      }
+
+      return `${levelHint}\n\n${subjectHint} Ask me the topic, and I'll explain it in a way that matches your level.`;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("userInput");
+      const value = input.value.trim();
+      if (!value) return;
+
+      addMessage(value, "user");
+
+      const reply = getNeoReply(value);
+
+      setTimeout(() => {
+        addMessage(reply, "neo");
+      }, 500);
+
+      input.value = "";
+    }
+
+    document.getElementById("userInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+</body>
+</html>
