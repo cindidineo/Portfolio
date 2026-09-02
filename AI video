@@ -4,16 +4,19 @@
 
 import os
 import requests
+import textwrap
+import uuid
 from moviepy.editor import *
 from PIL import Image, ImageDraw, ImageFont
 from gtts import gTTS
 
 # 1. DOWNLOAD THE COMPETITION INTRO VIDEO
 # Right-click the "intro video" link in the instructions > Copy Link Address and paste it here
-INTRO_URL = "PASTE_INTRO_LINK_HERE" 
+INTRO_URL = "PASTE_INTRO_LINK_HERE"
 if "PASTE" not in INTRO_URL:
-    r = requests.get(INTRO_URL)
-    open("intro.mp4","wb").write(r.content)
+    r = requests.get(INTRO_URL, timeout=30)
+    r.raise_for_status()
+    open("intro.mp4", "wb").write(r.content)
 
 # 2. YOUR VIDEO SCRIPT - 45 seconds, very clear for judges
 script_text = """
@@ -32,8 +35,7 @@ Technology does not replace elders. It amplifies them.
 tts = gTTS(text=script_text, lang='en', slow=False)
 tts.save("voice.mp3")
 
-# 4. CREATE AI VISUALS - These 5 scenes blend Heritage + 5IR (Use your 5 pictures you generated!)
-# For full AI generation points, we generate stylized frames with AI prompt visuals
+# 4. CREATE AI VISUALS
 scenes = [
     ("A dying language visualized as fading text", 8),
     ("Suikerbosrand sacred plants with QR codes", 9),
@@ -42,25 +44,58 @@ scenes = [
     ("NHC Digital Heritage Archive future", 10),
 ]
 
-def create_text_frame(text, duration, bg_color=(0,30,60)):
-    img = Image.new('RGB', (1280,720), bg_color)
-    draw = ImageDraw.Draw(img)
-    # Add text wrapped
-    draw.text((100,300), text, fill=(255,255,255), font=ImageFont.load_default())
-    img.save("temp.png")
-    return ImageClip("temp.png", duration=duration)
+def load_font(size=36):
+    # Try common TTF fonts; fallback to default if unavailable
+    possible = [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+    ]
+    for p in possible:
+        if os.path.exists(p):
+            return ImageFont.truetype(p, size=size)
+    return ImageFont.load_default()
 
-# Create main video clips from your AI images - Upload your 5 AI pictures to workbook first!
-# Rename your 5 pictures to pic1.jpg ... pic5.jpg and upload via File > show workbook files
+def create_text_frame(text, duration, bg_color=(0,30,60), size=(1280,720), padding=60):
+    width, height = size
+    img = Image.new('RGB', size, bg_color)
+    draw = ImageDraw.Draw(img)
+    font = load_font(size=40)
+    max_width = width - padding*2
+    # wrap text to fit width
+    lines = []
+    for paragraph in text.strip().split("\n"):
+        wrapped = textwrap.wrap(paragraph, width=40)  # tweak width as needed
+        if not wrapped:
+            lines.append("")
+        else:
+            lines.extend(wrapped)
+    # compute y start to vertically center
+    line_height = font.getsize("Ay")[1] + 8
+    total_h = line_height * len(lines)
+    y = max((height - total_h) // 2, padding)
+    for line in lines:
+        w, h = draw.textsize(line, font=font)
+        x = (width - w) // 2
+        draw.text((x, y), line, fill=(255,255,255), font=font)
+        y += line_height
+    tmpname = f"temp_{uuid.uuid4().hex}.png"
+    img.save(tmpname)
+    clip = ImageClip(tmpname).set_duration(duration).resize(size)
+    clip._tempfile = tmpname  # store for cleanup
+    return clip
+
+# Try to create clips from uploaded images pic1.jpg..pic5.jpg; if missing, create text frames from scenes
 clips = []
-try:
+all_images_present = all(os.path.exists(f"pic{i}.jpg") for i in range(1,6))
+if all_images_present:
     for i in range(1,6):
-        img_clip = ImageClip(f"pic{i}.jpg", duration=9).resize((1280,720))
+        img_clip = ImageClip(f"pic{i}.jpg").set_duration(9).resize((1280,720))
         clips.append(img_clip)
-    main_video = concatenate_videoclips(clips, method="compose")
-except:
-    # Fallback if you didn't upload pictures - creates colored text video
-    main_video = ColorClip(size=(1280,720), color=(0,30,60), duration=45)
+else:
+    for text, dur in scenes:
+        clips.append(create_text_frame(text, duration=dur, size=(1280,720)))
+
+main_video = concatenate_videoclips(clips, method="compose")
 
 # Add voice
 audio = AudioFileClip("voice.mp3")
@@ -68,16 +103,33 @@ main_video = main_video.set_audio(audio).set_duration(audio.duration)
 
 # 5. PREPEND INTRO VIDEO AND EXPORT WITH CORRECT SPECS
 if os.path.exists("intro.mp4"):
-    intro = VideoFileClip("intro.mp4")
-    final = concatenate_videoclips([intro, main_video])
+    intro = VideoFileClip("intro.mp4").resize((1280,720))
+    final = concatenate_videoclips([intro, main_video], method="compose")
 else:
     final = main_video
 
-# Export: MP4, H.264 (compatible with H.265 check), 720p, <50MB
+# Compute a safe bitrate (example: 2000k for good quality under 50MB for short clips)
+bitrate = "2000k"
+
+# Export: MP4, H.264, 720p
 final.write_videofile(
     "my_AI_explainer.mp4",
     codec="libx264",
     audio_codec="aac",
     fps=24,
-    resolution=(1280,720),
-    bitrate="
+    preset="medium",
+    bitrate=bitrate,
+    threads=4,
+    ffmpeg_params=["-movflags", "+faststart"]
+)
+
+# Cleanup temp images created by create_text_frame
+for clip in clips:
+    tmp = getattr(clip, "_tempfile", None)
+    if tmp and os.path.exists(tmp):
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+
+print("✅ Video generation complete! Saved as 'my_AI_explainer.mp4'")
