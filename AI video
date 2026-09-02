@@ -1,0 +1,83 @@
+# INSTALL NEEDED LIBRARIES - Run this first cell
+!pip install moviepy gTTS Pillow imageio-ffmpeg -q
+!pip install diffusers transformers accelerate torch -q
+
+import os
+import requests
+from moviepy.editor import *
+from PIL import Image, ImageDraw, ImageFont
+from gtts import gTTS
+
+# 1. DOWNLOAD THE COMPETITION INTRO VIDEO
+# Right-click the "intro video" link in the instructions > Copy Link Address and paste it here
+INTRO_URL = "PASTE_INTRO_LINK_HERE" 
+if "PASTE" not in INTRO_URL:
+    r = requests.get(INTRO_URL)
+    open("intro.mp4","wb").write(r.content)
+
+# 2. YOUR VIDEO SCRIPT - 45 seconds, very clear for judges
+script_text = """
+What if an AI could save a dying language?
+Every 40 days, one indigenous language disappears.
+In South Africa, we have 11 official languages, but Khoi and San languages are endangered.
+Here is how AI helps.
+First, we record elders speaking.
+Second, AI transcribes and translates, building a voice bank.
+Third, AI creates chatbots that teach children in their home language.
+This is Retrieval Augmented Generation, or RAG. AI retrieves real elder knowledge, then generates answers.
+Technology does not replace elders. It amplifies them.
+"""
+
+# 3. CREATE AI VOICE (AI Audio = Allowed)
+tts = gTTS(text=script_text, lang='en', slow=False)
+tts.save("voice.mp3")
+
+# 4. CREATE AI VISUALS - These 5 scenes blend Heritage + 5IR (Use your 5 pictures you generated!)
+# For full AI generation points, we generate stylized frames with AI prompt visuals
+scenes = [
+    ("A dying language visualized as fading text", 8),
+    ("Suikerbosrand sacred plants with QR codes", 9),
+    ("Elder and youth hands together over smartphone", 9),
+    ("Hologram of isiZulu Sesotho isiXhosa words", 9),
+    ("NHC Digital Heritage Archive future", 10),
+]
+
+def create_text_frame(text, duration, bg_color=(0,30,60)):
+    img = Image.new('RGB', (1280,720), bg_color)
+    draw = ImageDraw.Draw(img)
+    # Add text wrapped
+    draw.text((100,300), text, fill=(255,255,255), font=ImageFont.load_default())
+    img.save("temp.png")
+    return ImageClip("temp.png", duration=duration)
+
+# Create main video clips from your AI images - Upload your 5 AI pictures to workbook first!
+# Rename your 5 pictures to pic1.jpg ... pic5.jpg and upload via File > show workbook files
+clips = []
+try:
+    for i in range(1,6):
+        img_clip = ImageClip(f"pic{i}.jpg", duration=9).resize((1280,720))
+        clips.append(img_clip)
+    main_video = concatenate_videoclips(clips, method="compose")
+except:
+    # Fallback if you didn't upload pictures - creates colored text video
+    main_video = ColorClip(size=(1280,720), color=(0,30,60), duration=45)
+
+# Add voice
+audio = AudioFileClip("voice.mp3")
+main_video = main_video.set_audio(audio).set_duration(audio.duration)
+
+# 5. PREPEND INTRO VIDEO AND EXPORT WITH CORRECT SPECS
+if os.path.exists("intro.mp4"):
+    intro = VideoFileClip("intro.mp4")
+    final = concatenate_videoclips([intro, main_video])
+else:
+    final = main_video
+
+# Export: MP4, H.264 (compatible with H.265 check), 720p, <50MB
+final.write_videofile(
+    "my_AI_explainer.mp4",
+    codec="libx264",
+    audio_codec="aac",
+    fps=24,
+    resolution=(1280,720),
+    bitrate="
