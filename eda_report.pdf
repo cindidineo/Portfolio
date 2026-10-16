@@ -1,0 +1,51 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1000 >>
+stream
+BT
+/F1 20 Tf
+50 760 Td
+(EDA Final Report - UCI Adult Dataset) Tj
+0 -30 Td
+/F1 12 Tf
+(Problem/Data Overview: 48,842 rows and 14 variables about demographics, work, and income.) Tj
+0 -20 Td
+(Goal: inspect, clean, analyze, visualize, and explain income patterns using EDA.) Tj
+0 -20 Td
+(Data Cleaning: removed duplicates, handled missing ? values, imputed categorical modes, and) Tj
+0 -20 Td
+(converted numeric columns to proper types.) Tj
+0 -20 Td
+(Findings: higher education, age, and increased weekly work hours are linked with greater) Tj
+0 -20 Td
+(income. Capital gain shows significant dispersion and outliers.) Tj
+0 -20 Td
+(Conclusion: the cleaned dataset is suitable for EDA and later predictive modeling tasks.) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000010 00000 n 
+0000000062 00000 n 
+0000000123 00000 n 
+0000000245 00000 n 
+0000000456 00000 n 
+trailer
+<< /Root 1 0 R /Size 6 >>
+startxref
+600
+%%EOF
