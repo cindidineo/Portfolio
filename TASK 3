@@ -1,24 +1,289 @@
-import streamlit as st, pandas as pd, numpy as np, joblib
-import matplotlib.pyplot as plt
+import os
 
-st.title("Product Prediction - Final Task")
+import joblib
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import streamlit as st
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+st.set_page_config(page_title="Product Prediction - Final Task", layout="wide")
+
+MODEL_PATH = "model_pipeline.pkl"
+
+
+@st.cache_data
+def generate_training_data():
+    rng = np.random.default_rng(42)
+    rows = []
+
+    for _ in range(1200):
+        amount = int(rng.integers(150, 7001))
+        payment = rng.choice(["Credit Card", "Cash", "Debit Card"])
+        hour = int(rng.integers(0, 24))
+        timezone = rng.choice(["EST", "CST"])
+        is_weekend = bool(rng.integers(0, 2))
+
+        score = amount / 1200
+        if payment == "Cash":
+            score += 0.8
+        elif payment == "Debit Card":
+            score += 0.4
+        if is_weekend:
+            score += 0.5
+        if timezone == "CST":
+            score += 0.3
+        if hour < 9 or hour > 18:
+            score += 0.2
+
+        if amount <= 500:
+            label = "Basic"
+        elif amount <= 2500:
+            label = "Pro Suite"
+        else:
+            label = "Enterprise"
+
+        if score > 11.5:
+            label = "Enterprise"
+        elif score < 4.5:
+            label = "Basic"
+        elif amount > 1200 and amount < 3000:
+            label = "Pro Suite"
+
+        rows.append(
+            {
+                "amount": amount,
+                "payment": payment,
+                "hour": hour,
+                "timezone": timezone,
+                "is_weekend": is_weekend,
+                "product": label,
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
+@st.cache_resource
+def train_model():
+    df = generate_training_data()
+    X = df[["amount", "payment", "hour", "timezone", "is_weekend"]]
+    y = df["product"]
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
+
+    numeric_features = ["amount", "hour"]
+    categorical_features = ["payment", "timezone", "is_weekend"]
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            (
+                "num",
+                Pipeline(
+                    steps=[
+                        ("imputer", SimpleImputer(strategy="median")),
+                        ("scaler", StandardScaler()),
+                    ]
+                ),
+                numeric_features,
+            ),
+            (
+                "cat",
+                Pipeline(
+                    steps=[
+                        ("imputer", SimpleImputer(strategy="most_frequent")),
+                        ("onehot", OneHotEncoder(handle_unknown="ignore")),
+                    ]
+                ),
+                categorical_features,
+            ),
+        ]
+    )
+
+    classifier = RandomForestClassifier(
+        n_estimators=250,
+        random_state=42,
+        class_weight="balanced",
+        min_samples_leaf=2,
+    )
+
+    pipeline = Pipeline(
+        steps=[("preprocessor", preprocessor), ("classifier", classifier)]
+    )
+    pipeline.fit(X_train, y_train)
+
+    predictions = pipeline.predict(X_test)
+    accuracy = accuracy_score(y_test, predictions)
+    macro_f1 = f1_score(y_test, predictions, average="macro")
+
+    bundle = {
+        "model": pipeline,
+        "data": df,
+        "metrics": {
+            "accuracy": accuracy,
+            "macro_f1": macro_f1,
+            "classification_report": classification_report(
+                y_test,
+                predictions,
+                output_dict=False,
+            ),
+            "confusion_matrix": confusion_matrix(y_test, predictions),
+        },
+        "feature_order": list(X.columns),
+    }
+
+    joblib.dump(bundle, MODEL_PATH)
+    return bundle
+
+
 @st.cache_resource
 def load_model():
-    try: return joblib.load("model_pipeline.pkl")
-    except: return None
-model = load_model()
+    if os.path.exists(MODEL_PATH):
+        try:
+            bundle = joblib.load(MODEL_PATH)
+            if isinstance(bundle, dict) and "model" in bundle:
+                return bundle
+        except Exception:
+            pass
 
-menu = st.sidebar.radio("Menu", ["Overview","Input & Prediction","Dashboard","Performance"])
+    return train_model()
 
-if menu=="Input & Prediction":
-    amount = st.number_input("Amount",150,7000,500)
-    payment = st.selectbox("Payment", ["Credit Card","Cash","Debit Card"])
-    hour = st.slider("Hour",0,23,14)
-    timezone = st.selectbox("Timezone",["EST","CST"])
+
+bundle = load_model()
+model = bundle["model"]
+training_data = bundle["data"]
+metrics = bundle["metrics"]
+
+
+st.title("Product Prediction - Final Task")
+st.caption("Predict which product package a customer most likely belongs to.")
+
+
+menu = st.sidebar.radio(
+    "Menu",
+    ["Overview", "Input & Prediction", "Dashboard", "Performance"],
+    index=1,
+)
+
+
+if menu == "Overview":
+    st.subheader("Project overview")
+    st.write(
+        "This app predicts whether a customer likely belongs to the Basic, Pro Suite, "
+        "or Enterprise product tier based on transaction amount, payment method, time of day, "
+        "timezone, and whether the purchase happens on a weekend."
+    )
+
+    st.info(
+        "The model is trained automatically on demo data if a saved pipeline file is not found."
+    )
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Rows in dataset", f"{len(training_data):,}")
+    col2.metric("Product types", training_data["product"].nunique())
+    col3.metric("Model accuracy", f"{metrics['accuracy']:.2%}")
+
+elif menu == "Input & Prediction":
+    st.subheader("Customer input")
+    amount = st.number_input("Amount", min_value=150, max_value=7000, value=500, step=10)
+    payment = st.selectbox("Payment", ["Credit Card", "Cash", "Debit Card"])
+    hour = st.slider("Hour", min_value=0, max_value=23, value=14)
+    timezone = st.selectbox("Timezone", ["EST", "CST"])
     is_weekend = st.checkbox("Weekend?")
-    
+
     if st.button("Predict"):
-        pred = "Basic" if amount<=200 else "Pro Suite" if amount<=1500 else "Enterprise"
-        st.success(f"Predicted: {pred} with 98% prob")
-        if amount<150 or amount>6050:
-            st.warning("Edge case: outside training range")
+        input_df = pd.DataFrame(
+            [{
+                "amount": amount,
+                "payment": payment,
+                "hour": hour,
+                "timezone": timezone,
+                "is_weekend": is_weekend,
+            }]
+        )
+
+        prediction = model.predict(input_df)[0]
+        probabilities = model.predict_proba(input_df)[0]
+        confidence = float(np.max(probabilities))
+
+        st.success(f"Predicted product: {prediction} ({confidence:.0%} confidence)")
+
+        if amount < 150 or amount > 6050:
+            st.warning("Edge case: outside the typical training range.")
+
+        st.write("Prediction breakdown:")
+        probability_df = pd.DataFrame(
+            {
+                "Product": model.classes_,
+                "Probability": probabilities,
+            }
+        )
+        probability_df = probability_df.sort_values("Probability", ascending=False)
+        st.bar_chart(probability_df.set_index("Product"))
+
+elif menu == "Dashboard":
+    st.subheader("Dataset dashboard")
+
+    product_counts = training_data["product"].value_counts().sort_index()
+    payment_counts = training_data["payment"].value_counts()
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write("Product distribution")
+        st.bar_chart(product_counts)
+
+    with col2:
+        st.write("Payment method distribution")
+        st.bar_chart(payment_counts)
+
+    st.write("Sample data")
+    st.dataframe(training_data.head(10), use_container_width=True)
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    training_data.groupby("product")["amount"].mean().plot(kind="bar", ax=ax)
+    ax.set_title("Average amount by product")
+    ax.set_xlabel("Product")
+    ax.set_ylabel("Average Amount")
+    st.pyplot(fig)
+
+elif menu == "Performance":
+    st.subheader("Model performance")
+    st.metric("Accuracy", f"{metrics['accuracy']:.2%}")
+    st.metric("Macro F1 Score", f"{metrics['macro_f1']:.2%}")
+
+    st.text(metrics["classification_report"])
+
+    cm = metrics["confusion_matrix"]
+    labels = ["Basic", "Enterprise", "Pro Suite"]
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    im = ax.imshow(cm, cmap="Blues")
+    ax.set_title("Confusion matrix")
+    ax.set_xticks(range(len(labels)))
+    ax.set_yticks(range(len(labels)))
+    ax.set_xticklabels(labels)
+    ax.set_yticklabels(labels)
+
+    for i in range(cm.shape[0]):
+        for j in range(cm.shape[1]):
+            ax.text(j, i, cm[i, j], ha="center", va="center", color="black")
+
+    fig.colorbar(im, ax=ax)
+    st.pyplot(fig)
+
+    st.write("Model metadata:")
+    st.json({
+        "classes": model.classes_.tolist(),
+        "feature_names": bundle["feature_order"],
+    })
+
+
+st.sidebar.caption("Tip: run this app with: streamlit run \"TASK 3\"")
