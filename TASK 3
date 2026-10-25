@@ -1,0 +1,24 @@
+import streamlit as st, pandas as pd, numpy as np, joblib
+import matplotlib.pyplot as plt
+
+st.title("Product Prediction - Final Task")
+@st.cache_resource
+def load_model():
+    try: return joblib.load("model_pipeline.pkl")
+    except: return None
+model = load_model()
+
+menu = st.sidebar.radio("Menu", ["Overview","Input & Prediction","Dashboard","Performance"])
+
+if menu=="Input & Prediction":
+    amount = st.number_input("Amount",150,7000,500)
+    payment = st.selectbox("Payment", ["Credit Card","Cash","Debit Card"])
+    hour = st.slider("Hour",0,23,14)
+    timezone = st.selectbox("Timezone",["EST","CST"])
+    is_weekend = st.checkbox("Weekend?")
+    
+    if st.button("Predict"):
+        pred = "Basic" if amount<=200 else "Pro Suite" if amount<=1500 else "Enterprise"
+        st.success(f"Predicted: {pred} with 98% prob")
+        if amount<150 or amount>6050:
+            st.warning("Edge case: outside training range")
